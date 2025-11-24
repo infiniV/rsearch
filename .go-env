@@ -1,0 +1,14 @@
+#!/bin/bash
+# Go environment configuration for rsearch project
+# Source this file before running Go commands
+
+export GOROOT=/home/raw/go
+export GOPATH=/home/raw/go-workspace
+export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
+# Verify setup
+if [ "$1" = "--verify" ]; then
+    echo "GOROOT: $GOROOT"
+    echo "GOPATH: $GOPATH"
+    echo "Go version: $(go version 2>&1 | head -1)"
+fi
