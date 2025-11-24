@@ -39,3 +39,13 @@ type RangeQuery struct {
 func (r *RangeQuery) Type() string {
 	return "range_query"
 }
+
+// BoostQuery represents a boosted query (query^boost).
+type BoostQuery struct {
+	Query Node
+	Boost float64
+}
+
+func (b *BoostQuery) Type() string {
+	return "boost_query"
+}

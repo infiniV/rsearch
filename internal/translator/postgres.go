@@ -12,6 +12,7 @@ type PostgresTranslator struct {
 	paramCount int
 	params     []interface{}
 	paramTypes []string
+	metadata   map[string]interface{}
 }
 
 // NewPostgresTranslator creates a new PostgreSQL translator.
@@ -30,13 +31,16 @@ func (p *PostgresTranslator) Translate(ast Node, schema *schema.Schema) (*Transl
 	p.paramCount = 0
 	p.params = make([]interface{}, 0)
 	p.paramTypes = make([]string, 0)
+	p.metadata = make(map[string]interface{})
 
 	whereClause, err := p.translateNode(ast, schema)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewSQLOutput(whereClause, p.params, p.paramTypes), nil
+	output := NewSQLOutput(whereClause, p.params, p.paramTypes)
+	output.Metadata = p.metadata
+	return output, nil
 }
 
 // translateNode recursively translates AST nodes.
@@ -48,6 +52,8 @@ func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (st
 		return p.translateBinaryOp(n, schema)
 	case *RangeQuery:
 		return p.translateRangeQuery(n, schema)
+	case *BoostQuery:
+		return p.translateBoostQuery(n, schema)
 	default:
 		return "", fmt.Errorf("unsupported node type: %s", node.Type())
 	}
@@ -158,4 +164,32 @@ func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.
 	}
 
 	return strings.Join(clauses, " AND "), nil
+}
+
+// translateBoostQuery translates boosted queries.
+// PostgreSQL doesn't natively support relevance scoring like search engines,
+// so we translate the inner query normally and store the boost value in metadata
+// for application-level use.
+func (p *PostgresTranslator) translateBoostQuery(bq *BoostQuery, schema *schema.Schema) (string, error) {
+	// Translate the inner query
+	innerSQL, err := p.translateNode(bq.Query, schema)
+	if err != nil {
+		return "", err
+	}
+
+	// Store boost information in metadata
+	if p.metadata["boosts"] == nil {
+		p.metadata["boosts"] = make([]map[string]interface{}, 0)
+	}
+
+	boosts := p.metadata["boosts"].([]map[string]interface{})
+	boosts = append(boosts, map[string]interface{}{
+		"query": bq.Query.Type(),
+		"boost": bq.Boost,
+	})
+	p.metadata["boosts"] = boosts
+
+	// Return the inner SQL without modification
+	// SQL databases don't have native relevance scoring
+	return innerSQL, nil
 }

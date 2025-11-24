@@ -28,6 +28,9 @@ type TranslatorOutput struct {
 
 	// NoSQL-specific fields
 	Filter interface{} // MongoDB filter, ES query DSL
+
+	// Metadata contains additional information about the query
+	Metadata map[string]interface{}
 }
 
 // Registry manages translator instances.
