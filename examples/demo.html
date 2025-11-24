@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rsearch - Query Translation Demo</title>
+    <style>
+        :root {
+            --background: #262624;
+            --foreground: #c3c0b6;
+            --card: #262624;
+            --card-foreground: #faf9f5;
+            --popover: #30302e;
+            --popover-foreground: #e5e5e2;
+            --primary: #d97757;
+            --primary-foreground: #ffffff;
+            --secondary: #faf9f5;
+            --secondary-foreground: #30302e;
+            --muted: #1b1b19;
+            --muted-foreground: #b7b5a9;
+            --accent: #1a1915;
+            --accent-foreground: #f5f4ee;
+            --border: #3e3e38;
+            --input: #52514a;
+            --ring: #d97757;
+            --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            --radius: 0.5rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--background);
+            color: var(--foreground);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            color: var(--card-foreground);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        header p {
+            color: var(--muted-foreground);
+            font-size: 0.9rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 24px;
+            align-self: start;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+        }
+
+        .card h2 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted-foreground);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .example-queries {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .example-category {
+            margin-bottom: 16px;
+        }
+
+        .example-category h3 {
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-weight: 600;
+        }
+
+        .example-query {
+            background: var(--muted);
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border-radius: calc(var(--radius) - 2px);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+        }
+
+        .example-query:hover {
+            background: var(--accent);
+            border-color: var(--border);
+        }
+
+        .example-query .name {
+            font-size: 0.8rem;
+            color: var(--foreground);
+            margin-bottom: 2px;
+        }
+
+        .example-query .query {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--muted-foreground);
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .query-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 14px;
+            background: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
+            color: var(--card-foreground);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.2);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--muted-foreground);
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border: none;
+            border-radius: calc(var(--radius) - 2px);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button.secondary {
+            background: var(--muted);
+            color: var(--foreground);
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 10px 14px;
+            background: var(--muted);
+            border-radius: calc(var(--radius) - 2px);
+            font-size: 0.8rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        .status-dot.connected {
+            background: #22c55e;
+        }
+
+        .status-label {
+            color: var(--muted-foreground);
+        }
+
+        .status-value {
+            color: var(--foreground);
+            font-family: var(--font-mono);
+        }
+
+        .results-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .result-block {
+            margin-bottom: 20px;
+        }
+
+        .result-block:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .result-value {
+            background: var(--muted);
+            padding: 12px 14px;
+            border-radius: calc(var(--radius) - 2px);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--card-foreground);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .result-value.sql {
+            color: #a5d6ff;
+        }
+
+        .result-value.code {
+            font-size: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .param-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .param-index {
+            color: var(--primary);
+            min-width: 24px;
+        }
+
+        .param-value {
+            color: var(--card-foreground);
+        }
+
+        .param-type {
+            color: var(--muted-foreground);
+            font-size: 0.75rem;
+        }
+
+        .placeholder {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--muted-foreground);
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 14px;
+            border-radius: calc(var(--radius) - 2px);
+            color: #fca5a5;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .tab {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: calc(var(--radius) - 2px);
+            color: var(--muted-foreground);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .tab:hover {
+            color: var(--foreground);
+        }
+
+        .tab.active {
+            background: var(--muted);
+            color: var(--foreground);
+            border-color: var(--border);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .code-comment {
+            color: var(--muted-foreground);
+        }
+
+        .code-keyword {
+            color: #ff7b72;
+        }
+
+        .code-string {
+            color: #a5d6ff;
+        }
+
+        .code-var {
+            color: #ffa657;
+        }
+
+        @media (max-width: 800px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+            }
+
+            .example-queries {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>rsearch</h1>
+            <p>OpenSearch Query to SQL Translation</p>
+        </header>
+
+        <div class="main-grid">
+            <div class="sidebar">
+                <div class="card">
+                    <h2>Examples</h2>
+                    <div class="example-queries" id="exampleQueries"></div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="query-section">
+                    <div class="input-row">
+                        <input
+                            type="text"
+                            id="queryInput"
+                            placeholder="productCode:13w42 AND region:ca"
+                            autocomplete="off"
+                        />
+                        <button id="translateBtn">Translate</button>
+                        <button id="clearBtn" class="secondary">Clear</button>
+                    </div>
+                    <div class="status-bar">
+                        <div class="status-item">
+                            <span class="status-dot" id="statusDot"></span>
+                            <span class="status-label">API:</span>
+                            <span class="status-value" id="statusText">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Latency:</span>
+                            <span class="status-value" id="latencyValue">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Queries:</span>
+                            <span class="status-value" id="queryCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-section">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="translation">Translation</button>
+                        <button class="tab" data-tab="integration">Integration</button>
+                    </div>
+
+                    <div id="translationTab" class="tab-content active">
+                        <div id="translationResults">
+                            <div class="placeholder">
+                                Enter a query above or click an example
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="integrationTab" class="tab-content">
+                        <div id="integrationCode">
+                            <div class="placeholder">
+                                Translate a query to see integration examples
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080';
+        const SCHEMA = 'products';
+        const DATABASE = 'postgres';
+
+        const exampleQueries = [
+            {
+                category: 'Basic',
+                queries: [
+                    { name: 'Field match', query: 'productCode:13w42' },
+                    { name: 'By name', query: 'name:Widget*' },
+                    { name: 'By region', query: 'region:ca' },
+                ]
+            },
+            {
+                category: 'Boolean',
+                queries: [
+                    { name: 'AND', query: 'productCode:13w42 AND region:ca' },
+                    { name: 'OR', query: 'region:ca OR region:ny' },
+                    { name: 'NOT', query: 'region:ca AND NOT status:discontinued' },
+                ]
+            },
+            {
+                category: 'Ranges',
+                queries: [
+                    { name: 'Inclusive', query: 'rodLength:[50 TO 200]' },
+                    { name: 'Price range', query: 'price:[50 TO 150]' },
+                    { name: 'Comparison', query: 'price:>=100' },
+                ]
+            },
+            {
+                category: 'Wildcards',
+                queries: [
+                    { name: 'Prefix', query: 'name:Widget*' },
+                    { name: 'Contains', query: 'name:*get*' },
+                    { name: 'Single char', query: 'productCode:13w4?' },
+                ]
+            },
+            {
+                category: 'Complex',
+                queries: [
+                    { name: 'Grouped', query: '(region:ca OR region:ny) AND price:<150' },
+                    { name: 'Multi-field', query: 'name:Widget* AND rodLength:[100 TO 300]' },
+                ]
+            }
+        ];
+
+        let queryCount = 0;
+        let lastResult = null;
+
+        function renderExampleQueries() {
+            const container = document.getElementById('exampleQueries');
+            exampleQueries.forEach(category => {
+                const div = document.createElement('div');
+                div.className = 'example-category';
+                div.innerHTML = `<h3>${category.category}</h3>`;
+                category.queries.forEach(ex => {
+                    const item = document.createElement('div');
+                    item.className = 'example-query';
+                    item.innerHTML = `<div class="name">${ex.name}</div><div class="query">${ex.query}</div>`;
+                    item.onclick = () => {
+                        document.getElementById('queryInput').value = ex.query;
+                        translateQuery();
+                    };
+                    div.appendChild(item);
+                });
+                container.appendChild(div);
+            });
+        }
+
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    document.getElementById('statusDot').classList.add('connected');
+                    document.getElementById('statusText').textContent = 'Connected';
+                    return true;
+                }
+            } catch (e) {
+                document.getElementById('statusDot').classList.remove('connected');
+                document.getElementById('statusText').textContent = 'Offline';
+            }
+            return false;
+        }
+
+        async function translateQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                showError('Enter a query');
+                return;
+            }
+
+            showLoading();
+            const startTime = performance.now();
+
+            try {
+                const response = await fetch(`${API_URL}/api/v1/translate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ schema: SCHEMA, database: DATABASE, query })
+                });
+
+                const latency = Math.round(performance.now() - startTime);
+                document.getElementById('latencyValue').textContent = latency + 'ms';
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || `Error ${response.status}`);
+                }
+
+                const data = await response.json();
+                queryCount++;
+                document.getElementById('queryCount').textContent = queryCount;
+
+                lastResult = { query, data };
+                showResults(query, data);
+                showIntegration(query, data);
+
+            } catch (e) {
+                showError(e.message);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('translationResults').innerHTML = '<div class="placeholder">Translating...</div>';
+        }
+
+        function showResults(query, data) {
+            let paramsHtml = '';
+            if (data.parameters && data.parameters.length > 0) {
+                paramsHtml = data.parameters.map((p, i) =>
+                    `<div class="param-item"><span class="param-index">$${i + 1}</span><span class="param-value">${JSON.stringify(p)}</span><span class="param-type">${data.parameterTypes[i]}</span></div>`
+                ).join('');
+            } else {
+                paramsHtml = '<span style="color: var(--muted-foreground)">No parameters</span>';
+            }
+
+            document.getElementById('translationResults').innerHTML = `
+                <div class="result-block">
+                    <div class="result-label">Input Query</div>
+                    <div class="result-value">${escapeHtml(query)}</div>
+                </div>
+                <div class="result-block">
+                    <div class="result-label">SQL WHERE Clause</div>
+                    <div class="result-value sql">${escapeHtml(data.whereClause)}</div>
+                </div>
+                <div class="result-block">
+                    <div class="result-label">Parameters</div>
+                    <div class="result-value">${paramsHtml}</div>
+                </div>
+            `;
+        }
+
+        function showIntegration(query, data) {
+            const params = data.parameters ? JSON.stringify(data.parameters) : '[]';
+            const whereClause = data.whereClause;
+
+            const jsCode = `<span class="code-comment">// JavaScript/Node.js integration</span>
+<span class="code-keyword">const</span> result = <span class="code-keyword">await</span> fetch(<span class="code-string">'${API_URL}/api/v1/translate'</span>, {
+  method: <span class="code-string">'POST'</span>,
+  headers: { <span class="code-string">'Content-Type'</span>: <span class="code-string">'application/json'</span> },
+  body: JSON.stringify({
+    schema: <span class="code-string">'products'</span>,
+    database: <span class="code-string">'postgres'</span>,
+    query: <span class="code-string">'${escapeHtml(query)}'</span>
+  })
+});
+
+<span class="code-keyword">const</span> { whereClause, parameters } = <span class="code-keyword">await</span> result.json();
+
+<span class="code-comment">// Use with your database</span>
+<span class="code-keyword">const</span> rows = <span class="code-keyword">await</span> db.query(
+  <span class="code-string">\`SELECT * FROM products WHERE \${whereClause}\`</span>,
+  parameters
+);`;
+
+            const pythonCode = `<span class="code-comment"># Python integration</span>
+<span class="code-keyword">import</span> requests
+
+result = requests.post(<span class="code-string">'${API_URL}/api/v1/translate'</span>, json={
+    <span class="code-string">'schema'</span>: <span class="code-string">'products'</span>,
+    <span class="code-string">'database'</span>: <span class="code-string">'postgres'</span>,
+    <span class="code-string">'query'</span>: <span class="code-string">'${escapeHtml(query)}'</span>
+}).json()
+
+<span class="code-comment"># Use with your database</span>
+cursor.execute(
+    <span class="code-string">f"SELECT * FROM products WHERE {result['whereClause']}"</span>,
+    result[<span class="code-string">'parameters'</span>]
+)
+rows = cursor.fetchall()`;
+
+            const goCode = `<span class="code-comment">// Go integration</span>
+body, _ := json.Marshal(map[<span class="code-keyword">string</span>]<span class="code-keyword">string</span>{
+    <span class="code-string">"schema"</span>:   <span class="code-string">"products"</span>,
+    <span class="code-string">"database"</span>: <span class="code-string">"postgres"</span>,
+    <span class="code-string">"query"</span>:    <span class="code-string">"${escapeHtml(query)}"</span>,
+})
+
+resp, _ := http.Post(<span class="code-string">"${API_URL}/api/v1/translate"</span>,
+    <span class="code-string">"application/json"</span>, bytes.NewBuffer(body))
+
+<span class="code-keyword">var</span> result <span class="code-keyword">struct</span> {
+    WhereClause <span class="code-keyword">string</span>        <span class="code-string">\`json:"whereClause"\`</span>
+    Parameters  []<span class="code-keyword">interface</span>{} <span class="code-string">\`json:"parameters"\`</span>
+}
+json.NewDecoder(resp.Body).Decode(&result)
+
+<span class="code-comment">// Use with your database</span>
+query := fmt.Sprintf(<span class="code-string">"SELECT * FROM products WHERE %s"</span>, result.WhereClause)
+rows, _ := db.Query(query, result.Parameters...)`;
+
+            document.getElementById('integrationCode').innerHTML = `
+                <div class="result-block">
+                    <div class="result-label">JavaScript</div>
+                    <div class="result-value code">${jsCode}</div>
+                </div>
+                <div class="result-block">
+                    <div class="result-label">Python</div>
+                    <div class="result-value code">${pythonCode}</div>
+                </div>
+                <div class="result-block">
+                    <div class="result-label">Go</div>
+                    <div class="result-value code">${goCode}</div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('translationResults').innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearQuery() {
+            document.getElementById('queryInput').value = '';
+            document.getElementById('translationResults').innerHTML = '<div class="placeholder">Enter a query above or click an example</div>';
+            document.getElementById('integrationCode').innerHTML = '<div class="placeholder">Translate a query to see integration examples</div>';
+            lastResult = null;
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+            });
+        });
+
+        document.getElementById('translateBtn').addEventListener('click', translateQuery);
+        document.getElementById('clearBtn').addEventListener('click', clearQuery);
+        document.getElementById('queryInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') translateQuery();
+        });
+
+        renderExampleQueries();
+        checkServerStatus();
+        setInterval(checkServerStatus, 10000);
+    </script>
+</body>
+</html>

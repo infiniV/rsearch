@@ -6,26 +6,32 @@
       "indexed": true,
       "aliases": ["code", "sku", "itemCode"]
     },
-    "productName": {
+    "name": {
       "type": "text",
       "indexed": true,
-      "aliases": ["name", "title"]
+      "aliases": ["productName", "title"]
     },
     "description": {
       "type": "text"
     },
+    "rodLength": {
+      "type": "integer",
+      "aliases": ["length"]
+    },
     "price": {
       "type": "float"
     },
-    "quantity": {
-      "type": "integer",
-      "aliases": ["stock", "inventory"]
+    "region": {
+      "type": "text",
+      "indexed": true
     },
     "inStock": {
       "type": "boolean"
     },
-    "categoryId": {
-      "type": "integer"
+    "status": {
+      "type": "text",
+      "indexed": true,
+      "aliases": ["state"]
     },
     "tags": {
       "type": "array"
@@ -34,18 +40,13 @@
       "type": "json"
     },
     "createdAt": {
-      "type": "datetime",
-      "column": "created_timestamp"
-    },
-    "updatedAt": {
-      "type": "datetime",
-      "column": "updated_timestamp"
+      "type": "datetime"
     }
   },
   "options": {
     "namingConvention": "snake_case",
     "strictFieldNames": false,
     "strictOperators": true,
-    "defaultField": "productName"
+    "defaultField": "name"
   }
 }
