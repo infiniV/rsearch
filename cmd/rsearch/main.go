@@ -12,6 +12,8 @@ import (
 	"github.com/infiniv/rsearch/internal/api"
 	"github.com/infiniv/rsearch/internal/config"
 	"github.com/infiniv/rsearch/internal/observability"
+	"github.com/infiniv/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/translator"
 	"github.com/infiniv/rsearch/pkg/rsearch"
 )
 
@@ -44,8 +46,17 @@ func main() {
 		logger.Infof("Metrics enabled on %s%s", cfg.GetMetricsAddress(), cfg.Metrics.Path)
 	}
 
+	// Initialize schema registry
+	schemaRegistry := schema.NewRegistry()
+	logger.Info("Schema registry initialized")
+
+	// Initialize translator registry
+	translatorRegistry := translator.NewRegistry()
+	translatorRegistry.Register("postgres", translator.NewPostgresTranslator())
+	logger.Info("Translator registry initialized with PostgreSQL support")
+
 	// Setup routes
-	router := api.SetupRoutes(cfg, logger, metrics)
+	router := api.SetupRoutes(cfg, logger, metrics, schemaRegistry, translatorRegistry)
 
 	// Create HTTP server
 	server := &http.Server{
