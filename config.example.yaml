@@ -1,0 +1,72 @@
+# rsearch Configuration Example
+# Copy this file to config.yaml and adjust as needed
+
+server:
+  host: "localhost"
+  port: 8080
+  readTimeout: 30s
+  writeTimeout: 30s
+  shutdownTimeout: 10s
+
+logging:
+  level: "info"  # debug, info, warn, error
+  format: "json" # json or console
+  output: "stdout"
+
+metrics:
+  enabled: false
+  port: 9090
+  path: "/metrics"
+
+cors:
+  enabled: false
+  allowedOrigins:
+    - "http://localhost:3000"
+    - "https://app.example.com"
+  allowedMethods:
+    - "GET"
+    - "POST"
+    - "DELETE"
+
+schemas:
+  loadFromFiles: false
+  directory: "./schemas"
+
+limits:
+  maxQueryLength: 10000
+  maxParameterCount: 100
+  maxParseDepth: 50
+  maxSchemaFields: 1000
+  maxFieldNameLength: 255
+  maxSchemas: 100
+  maxRequestBodySize: 1048576  # bytes (1MB)
+  requestTimeout: 30s
+  rateLimit:
+    enabled: false
+    requestsPerMinute: 100
+    requestsPerHour: 5000
+    burst: 10
+
+cache:
+  enabled: true
+  maxSize: 10000
+  ttl: 3600  # seconds
+
+security:
+  allowedSpecialChars: ".-_"
+  blockSqlKeywords: true
+  auth:
+    enabled: false
+    type: "apikey"
+    apiKeys: []
+
+features:
+  querySuggestions: false
+  maxQueryLength: 1000
+  requestIdHeader: "X-Request-ID"
+
+api:
+  versions:
+    v1:
+      enabled: true
+      deprecated: false
