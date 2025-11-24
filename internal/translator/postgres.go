@@ -48,6 +48,10 @@ func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (st
 		return p.translateBinaryOp(n, schema)
 	case *RangeQuery:
 		return p.translateRangeQuery(n, schema)
+	case *UnaryOp:
+		return p.translateUnaryOp(n, schema)
+	case *ExistsQuery:
+		return p.translateExistsQuery(n, schema)
 	default:
 		return "", fmt.Errorf("unsupported node type: %s", node.Type())
 	}
@@ -158,4 +162,50 @@ func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.
 	}
 
 	return strings.Join(clauses, " AND "), nil
+}
+
+// translateUnaryOp translates NOT operations.
+func (p *PostgresTranslator) translateUnaryOp(uo *UnaryOp, schema *schema.Schema) (string, error) {
+	operand, err := p.translateNode(uo.Operand, schema)
+	if err != nil {
+		return "", err
+	}
+
+	// Wrap in parentheses if needed (for complex expressions or JSON exists checks)
+	if p.needsParenthesesForNot(uo.Operand, operand) {
+		operand = fmt.Sprintf("(%s)", operand)
+	}
+
+	return fmt.Sprintf("NOT %s", operand), nil
+}
+
+// needsParenthesesForNot determines if operand needs parentheses in NOT context
+func (p *PostgresTranslator) needsParenthesesForNot(node Node, sql string) bool {
+	// Binary operations always need parentheses
+	if _, isBinaryOp := node.(*BinaryOp); isBinaryOp {
+		return true
+	}
+	// Multi-clause SQL (like JSON exists checks with AND) needs parentheses
+	if strings.Contains(sql, " AND ") || strings.Contains(sql, " OR ") {
+		return true
+	}
+	return false
+}
+
+// translateExistsQuery translates existence checks (_exists_:field).
+func (p *PostgresTranslator) translateExistsQuery(eq *ExistsQuery, schema *schema.Schema) (string, error) {
+	// Validate field exists in schema
+	columnName, field, err := schema.ResolveField(eq.Field)
+	if err != nil {
+		return "", fmt.Errorf("field %s not found in schema %s", eq.Field, schema.Name)
+	}
+
+	// For JSON/JSONB fields, need special handling
+	if field.Type == "json" {
+		// JSON fields: check IS NOT NULL and not the JSON null value
+		return fmt.Sprintf("%s IS NOT NULL AND %s != 'null'::jsonb", columnName, columnName), nil
+	}
+
+	// For regular fields: simple IS NOT NULL check
+	return fmt.Sprintf("%s IS NOT NULL", columnName), nil
 }
