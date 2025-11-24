@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/infiniv/rsearch/internal/translator"
 	"github.com/stretchr/testify/assert"
@@ -21,8 +22,8 @@ func TestTranslateHandler_ParserNotImplemented(t *testing.T) {
 	// Register test schema
 	testSchema := &schema.Schema{
 		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
+		Fields: map[string]schema.Field{
+			"product_code": {Type: schema.TypeText, Column: "product_code", Indexed: true},
 		},
 	}
 	schemaRegistry.Register(testSchema)
@@ -102,8 +103,8 @@ func TestTranslateHandler_DatabaseNotSupported(t *testing.T) {
 	// Register test schema
 	testSchema := &schema.Schema{
 		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
+		Fields: map[string]schema.Field{
+			"product_code": {Type: schema.TypeText, Column: "product_code", Indexed: true},
 		},
 	}
 	schemaRegistry.Register(testSchema)
@@ -137,9 +138,9 @@ func TestTranslateHandler_WithStubAST(t *testing.T) {
 	// Register test schema
 	testSchema := &schema.Schema{
 		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
-			"region":       {Name: "region", Type: "text", Searchable: true},
+		Fields: map[string]schema.Field{
+			"product_code": {Type: schema.TypeText, Column: "product_code", Indexed: true},
+			"region":       {Type: schema.TypeText, Column: "region", Indexed: true},
 		},
 	}
 	schemaRegistry.Register(testSchema)
@@ -151,18 +152,18 @@ func TestTranslateHandler_WithStubAST(t *testing.T) {
 	handler := &TranslateHandler{
 		schemaRegistry:     schemaRegistry,
 		translatorRegistry: translatorRegistry,
-		parseQuery: func(query string) (translator.Node, error) {
+		parseQuery: func(query string) (parser.Node, error) {
 			// Stub parser for testing
 			// Parse: productCode:13w42 AND region:ca
-			return &translator.BinaryOp{
+			return &parser.BinaryOp{
 				Op: "AND",
-				Left: &translator.FieldQuery{
+				Left: &parser.FieldQuery{
 					Field: "product_code",
-					Value: "13w42",
+					Value: &parser.TermValue{Term: "13w42", Pos: parser.Position{}},
 				},
-				Right: &translator.FieldQuery{
+				Right: &parser.FieldQuery{
 					Field: "region",
-					Value: "ca",
+					Value: &parser.TermValue{Term: "ca", Pos: parser.Position{}},
 				},
 			}, nil
 		},

@@ -49,10 +49,12 @@ func (p *PostgresTranslator) translateNode(node parser.Node, schema *schema.Sche
 		return p.translateBinaryOp(n, schema)
 	case *parser.RangeQuery:
 		return p.translateRangeQuery(n, schema)
-	case *WildcardQuery:
-		return p.translateWildcardQuery(n, schema)
-	case *RegexQuery:
-		return p.translateRegexQuery(n, schema)
+	case *parser.UnaryOp:
+		return p.translateUnaryOp(n, schema)
+	case *parser.RequiredQuery:
+		return p.translateRequiredQuery(n, schema)
+	case *parser.ProhibitedQuery:
+		return p.translateProhibitedQuery(n, schema)
 	default:
 		return "", fmt.Errorf("unsupported node type: %s", node.Type())
 	}
@@ -197,71 +199,39 @@ func (p *PostgresTranslator) translateRangeQuery(rq *parser.RangeQuery, schema *
 	return strings.Join(clauses, " AND "), nil
 }
 
-// translateWildcardQuery translates wildcard queries to PostgreSQL LIKE patterns.
-// Converts * to % (zero or more chars) and ? to _ (single char).
-func (p *PostgresTranslator) translateWildcardQuery(wq *WildcardQuery, schema *schema.Schema) (string, error) {
-	// Validate field exists in schema
-	columnName, field, err := schema.ResolveField(wq.Field)
+// translateUnaryOp translates unary operations (NOT, +, -)
+func (p *PostgresTranslator) translateUnaryOp(uo *parser.UnaryOp, schema *schema.Schema) (string, error) {
+	operand, err := p.translateNode(uo.Operand, schema)
 	if err != nil {
-		return "", fmt.Errorf("field %s not found in schema %s", wq.Field, schema.Name)
+		return "", err
 	}
 
-	_ = field // Use field if needed later
-
-	// Convert wildcard pattern to PostgreSQL LIKE pattern
-	likePattern := convertWildcardToLike(wq.Pattern)
-
-	// Add parameter
-	p.paramCount++
-	p.params = append(p.params, likePattern)
-	p.paramTypes = append(p.paramTypes, string(field.Type))
-
-	// Generate SQL with LIKE operator
-	return fmt.Sprintf("%s LIKE $%d", columnName, p.paramCount), nil
+	switch uo.Op {
+	case "NOT", "!":
+		return fmt.Sprintf("NOT %s", operand), nil
+	case "+":
+		// Required term - just return the operand
+		return operand, nil
+	case "-":
+		// Prohibited term - negate it
+		return fmt.Sprintf("NOT %s", operand), nil
+	default:
+		return "", fmt.Errorf("unsupported unary operator: %s", uo.Op)
+	}
 }
 
-// translateRegexQuery translates regex queries to PostgreSQL regex operator.
-func (p *PostgresTranslator) translateRegexQuery(rq *RegexQuery, schema *schema.Schema) (string, error) {
-	// Validate field exists in schema
-	columnName, field, err := schema.ResolveField(rq.Field)
-	if err != nil {
-		return "", fmt.Errorf("field %s not found in schema %s", rq.Field, schema.Name)
-	}
-
-	_ = field // Use field if needed later
-
-	// Add parameter
-	p.paramCount++
-	p.params = append(p.params, rq.Pattern)
-	p.paramTypes = append(p.paramTypes, string(field.Type))
-
-	// Generate SQL with PostgreSQL regex operator (~)
-	return fmt.Sprintf("%s ~ $%d", columnName, p.paramCount), nil
+// translateRequiredQuery translates required queries (+term)
+func (p *PostgresTranslator) translateRequiredQuery(rq *parser.RequiredQuery, schema *schema.Schema) (string, error) {
+	// Required query is just the query itself in SQL
+	return p.translateNode(rq.Query, schema)
 }
 
-// convertWildcardToLike converts wildcard patterns (* and ?) to PostgreSQL LIKE patterns (% and _).
-// Also escapes special LIKE characters: %, _, and \.
-func convertWildcardToLike(pattern string) string {
-	var result strings.Builder
-	result.Grow(len(pattern))
-
-	for i := 0; i < len(pattern); i++ {
-		ch := pattern[i]
-		switch ch {
-		case '*':
-			// * becomes % (zero or more characters)
-			result.WriteByte('%')
-		case '?':
-			// ? becomes _ (single character)
-			result.WriteByte('_')
-		case '%', '_', '\\':
-			// Escape special LIKE characters
-			result.WriteByte('\\')
-			result.WriteByte(ch)
-		default:
-			result.WriteByte(ch)
-		}
+// translateProhibitedQuery translates prohibited queries (-term)
+func (p *PostgresTranslator) translateProhibitedQuery(pq *parser.ProhibitedQuery, schema *schema.Schema) (string, error) {
+	// Prohibited query is NOT query in SQL
+	query, err := p.translateNode(pq.Query, schema)
+	if err != nil {
+		return "", err
 	}
-
-	return result.String()
+	return fmt.Sprintf("NOT %s", query), nil
 }

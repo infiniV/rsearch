@@ -3,7 +3,6 @@ package parser
 import (
 	"testing"
 
-	"github.com/infiniv/rsearch/internal/translator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +34,7 @@ func TestParserAndOperator(t *testing.T) {
 			require.NotNil(t, node)
 
 			// Verify it's a binary operation
-			binOp, ok := node.(*translator.BinaryOp)
+			binOp, ok := node.(*BinaryOp)
 			require.True(t, ok, "expected BinaryOp node")
 			assert.Equal(t, "AND", binOp.Op)
 			assert.NotNil(t, binOp.Left)
@@ -71,7 +70,7 @@ func TestParserOrOperator(t *testing.T) {
 			require.NotNil(t, node)
 
 			// Verify it's a binary operation
-			binOp, ok := node.(*translator.BinaryOp)
+			binOp, ok := node.(*BinaryOp)
 			require.True(t, ok, "expected BinaryOp node")
 			assert.Equal(t, "OR", binOp.Op)
 			assert.NotNil(t, binOp.Left)
@@ -107,7 +106,7 @@ func TestParserNotOperator(t *testing.T) {
 			require.NotNil(t, node)
 
 			// Verify it's a unary operation
-			unaryOp, ok := node.(*translator.UnaryOp)
+			unaryOp, ok := node.(*UnaryOp)
 			require.True(t, ok, "expected UnaryOp node")
 			assert.Equal(t, "NOT", unaryOp.Op)
 			assert.NotNil(t, unaryOp.Operand)
@@ -139,7 +138,7 @@ func TestParserRequiredOperator(t *testing.T) {
 
 			// For single required term
 			if tt.name == "Required term" {
-				unaryOp, ok := node.(*translator.UnaryOp)
+				unaryOp, ok := node.(*UnaryOp)
 				require.True(t, ok, "expected UnaryOp node")
 				assert.Equal(t, "+", unaryOp.Op)
 				assert.NotNil(t, unaryOp.Operand)
@@ -172,7 +171,7 @@ func TestParserProhibitedOperator(t *testing.T) {
 
 			// For single prohibited term
 			if tt.name == "Prohibited term" {
-				unaryOp, ok := node.(*translator.UnaryOp)
+				unaryOp, ok := node.(*UnaryOp)
 				require.True(t, ok, "expected UnaryOp node")
 				assert.Equal(t, "-", unaryOp.Op)
 				assert.NotNil(t, unaryOp.Operand)
@@ -226,12 +225,12 @@ func TestParserOperatorPrecedence(t *testing.T) {
 	require.NotNil(t, node)
 
 	// Root should be OR
-	rootOp, ok := node.(*translator.BinaryOp)
+	rootOp, ok := node.(*BinaryOp)
 	require.True(t, ok, "root should be BinaryOp")
 	assert.Equal(t, "OR", rootOp.Op)
 
 	// Right side should be AND
-	rightOp, ok := rootOp.Right.(*translator.BinaryOp)
+	rightOp, ok := rootOp.Right.(*BinaryOp)
 	require.True(t, ok, "right should be BinaryOp")
 	assert.Equal(t, "AND", rightOp.Op)
 }
@@ -270,10 +269,10 @@ func TestParserFieldQuery(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, node)
 
-			fieldQuery, ok := node.(*translator.FieldQuery)
+			fieldQuery, ok := node.(*FieldQuery)
 			require.True(t, ok, "expected FieldQuery node")
 			assert.Equal(t, tt.expectedField, fieldQuery.Field)
-			assert.Equal(t, tt.expectedValue, fieldQuery.Value)
+			assert.Equal(t, tt.expectedValue, fieldQuery.Value.Value())
 		})
 	}
 }

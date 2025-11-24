@@ -3,6 +3,7 @@ package translator
 import (
 	"testing"
 
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,21 +18,21 @@ func TestTranslatorAndOperator(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		ast            Node
+		ast            parser.Node
 		expectedSQL    string
 		expectedParams []interface{}
 	}{
 		{
 			name: "Simple AND operation",
-			ast: &BinaryOp{
+			ast: &parser.BinaryOp{
 				Op: "AND",
-				Left: &FieldQuery{
+				Left: &parser.FieldQuery{
 					Field: "field1",
-					Value: "value1",
+					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
 				},
-				Right: &FieldQuery{
+				Right: &parser.FieldQuery{
 					Field: "field2",
-					Value: "value2",
+					Value: &parser.TermValue{Term: "value2", Pos: parser.Position{}},
 				},
 			},
 			expectedSQL:    "field1 = $1 AND field2 = $2",
@@ -59,21 +60,21 @@ func TestTranslatorOrOperator(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		ast            Node
+		ast            parser.Node
 		expectedSQL    string
 		expectedParams []interface{}
 	}{
 		{
 			name: "Simple OR operation",
-			ast: &BinaryOp{
+			ast: &parser.BinaryOp{
 				Op: "OR",
-				Left: &FieldQuery{
+				Left: &parser.FieldQuery{
 					Field: "field1",
-					Value: "value1",
+					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
 				},
-				Right: &FieldQuery{
+				Right: &parser.FieldQuery{
 					Field: "field2",
-					Value: "value2",
+					Value: &parser.TermValue{Term: "value2", Pos: parser.Position{}},
 				},
 			},
 			expectedSQL:    "field1 = $1 OR field2 = $2",
@@ -100,17 +101,17 @@ func TestTranslatorNotOperator(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		ast            Node
+		ast            parser.Node
 		expectedSQL    string
 		expectedParams []interface{}
 	}{
 		{
 			name: "NOT operation",
-			ast: &UnaryOp{
+			ast: &parser.UnaryOp{
 				Op: "NOT",
-				Operand: &FieldQuery{
+				Operand: &parser.FieldQuery{
 					Field: "field1",
-					Value: "value1",
+					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
 				},
 			},
 			expectedSQL:    "NOT field1 = $1",
@@ -137,17 +138,17 @@ func TestTranslatorRequiredOperator(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		ast            Node
+		ast            parser.Node
 		expectedSQL    string
 		expectedParams []interface{}
 	}{
 		{
 			name: "Required term (+)",
-			ast: &UnaryOp{
+			ast: &parser.UnaryOp{
 				Op: "+",
-				Operand: &FieldQuery{
+				Operand: &parser.FieldQuery{
 					Field: "field1",
-					Value: "value1",
+					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
 				},
 			},
 			expectedSQL:    "field1 = $1",
@@ -174,17 +175,17 @@ func TestTranslatorProhibitedOperator(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		ast            Node
+		ast            parser.Node
 		expectedSQL    string
 		expectedParams []interface{}
 	}{
 		{
 			name: "Prohibited term (-)",
-			ast: &UnaryOp{
+			ast: &parser.UnaryOp{
 				Op: "-",
-				Operand: &FieldQuery{
+				Operand: &parser.FieldQuery{
 					Field: "field1",
-					Value: "value1",
+					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
 				},
 			},
 			expectedSQL:    "NOT field1 = $1",
@@ -213,28 +214,28 @@ func TestTranslatorComplexExpressions(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		ast            Node
+		ast            parser.Node
 		expectedSQL    string
 		expectedParams []interface{}
 	}{
 		{
 			name: "(a OR b) AND c",
-			ast: &BinaryOp{
+			ast: &parser.BinaryOp{
 				Op: "AND",
-				Left: &BinaryOp{
+				Left: &parser.BinaryOp{
 					Op: "OR",
-					Left: &FieldQuery{
+					Left: &parser.FieldQuery{
 						Field: "a",
-						Value: "1",
+						Value: &parser.TermValue{Term: "1", Pos: parser.Position{}},
 					},
-					Right: &FieldQuery{
+					Right: &parser.FieldQuery{
 						Field: "b",
-						Value: "2",
+						Value: &parser.TermValue{Term: "2", Pos: parser.Position{}},
 					},
 				},
-				Right: &FieldQuery{
+				Right: &parser.FieldQuery{
 					Field: "c",
-					Value: "3",
+					Value: &parser.TermValue{Term: "3", Pos: parser.Position{}},
 				},
 			},
 			expectedSQL:    "(a = $1 OR b = $2) AND c = $3",
@@ -242,18 +243,18 @@ func TestTranslatorComplexExpressions(t *testing.T) {
 		},
 		{
 			name: "NOT a AND b",
-			ast: &BinaryOp{
+			ast: &parser.BinaryOp{
 				Op: "AND",
-				Left: &UnaryOp{
+				Left: &parser.UnaryOp{
 					Op: "NOT",
-					Operand: &FieldQuery{
+					Operand: &parser.FieldQuery{
 						Field: "a",
-						Value: "1",
+						Value: &parser.TermValue{Term: "1", Pos: parser.Position{}},
 					},
 				},
-				Right: &FieldQuery{
+				Right: &parser.FieldQuery{
 					Field: "b",
-					Value: "2",
+					Value: &parser.TermValue{Term: "2", Pos: parser.Position{}},
 				},
 			},
 			expectedSQL:    "NOT a = $1 AND b = $2",
@@ -261,20 +262,20 @@ func TestTranslatorComplexExpressions(t *testing.T) {
 		},
 		{
 			name: "+required -prohibited",
-			ast: &BinaryOp{
+			ast: &parser.BinaryOp{
 				Op: "AND",
-				Left: &UnaryOp{
+				Left: &parser.UnaryOp{
 					Op: "+",
-					Operand: &FieldQuery{
+					Operand: &parser.FieldQuery{
 						Field: "a",
-						Value: "required",
+						Value: &parser.TermValue{Term: "required", Pos: parser.Position{}},
 					},
 				},
-				Right: &UnaryOp{
+				Right: &parser.UnaryOp{
 					Op: "-",
-					Operand: &FieldQuery{
+					Operand: &parser.FieldQuery{
 						Field: "b",
-						Value: "prohibited",
+						Value: &parser.TermValue{Term: "prohibited", Pos: parser.Position{}},
 					},
 				},
 			},
@@ -304,27 +305,27 @@ func TestTranslatorOperatorPrecedence(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		ast            Node
+		ast            parser.Node
 		expectedSQL    string
 		expectedParams []interface{}
 	}{
 		{
 			name: "a OR (b AND c) - nested binary ops",
-			ast: &BinaryOp{
+			ast: &parser.BinaryOp{
 				Op: "OR",
-				Left: &FieldQuery{
+				Left: &parser.FieldQuery{
 					Field: "a",
-					Value: "1",
+					Value: &parser.TermValue{Term: "1", Pos: parser.Position{}},
 				},
-				Right: &BinaryOp{
+				Right: &parser.BinaryOp{
 					Op: "AND",
-					Left: &FieldQuery{
+					Left: &parser.FieldQuery{
 						Field: "b",
-						Value: "2",
+						Value: &parser.TermValue{Term: "2", Pos: parser.Position{}},
 					},
-					Right: &FieldQuery{
+					Right: &parser.FieldQuery{
 						Field: "c",
-						Value: "3",
+						Value: &parser.TermValue{Term: "3", Pos: parser.Position{}},
 					},
 				},
 			},
