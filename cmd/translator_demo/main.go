@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/infiniv/rsearch/internal/translator"
 )
@@ -47,57 +48,57 @@ func main() {
 	// Example translations using stub AST
 	examples := []struct {
 		description string
-		ast         translator.Node
+		ast         parser.Node
 	}{
 		{
 			description: "Simple field query: productCode:13w42",
-			ast: &translator.FieldQuery{
+			ast: &parser.FieldQuery{
 				Field: "product_code",
-				Value: "13w42",
+				Value: &parser.TermValue{Term: "13w42", Pos: parser.Position{}},
 			},
 		},
 		{
 			description: "Boolean AND: productCode:13w42 AND region:ca",
-			ast: &translator.BinaryOp{
+			ast: &parser.BinaryOp{
 				Op: "AND",
-				Left: &translator.FieldQuery{
+				Left: &parser.FieldQuery{
 					Field: "product_code",
-					Value: "13w42",
+					Value: &parser.TermValue{Term: "13w42", Pos: parser.Position{}},
 				},
-				Right: &translator.FieldQuery{
+				Right: &parser.FieldQuery{
 					Field: "region",
-					Value: "ca",
+					Value: &parser.TermValue{Term: "ca", Pos: parser.Position{}},
 				},
 			},
 		},
 		{
 			description: "Range query: rodLength:[50 TO 500]",
-			ast: &translator.RangeQuery{
+			ast: &parser.RangeQuery{
 				Field:          "rod_length",
-				Start:          50,
-				End:            500,
+				Start:          &parser.NumberValue{Number: "50", Pos: parser.Position{}},
+				End:            &parser.NumberValue{Number: "500", Pos: parser.Position{}},
 				InclusiveStart: true,
 				InclusiveEnd:   true,
 			},
 		},
 		{
 			description: "Complex nested: (productCode:13w42 AND region:ca) OR status:active",
-			ast: &translator.BinaryOp{
+			ast: &parser.BinaryOp{
 				Op: "OR",
-				Left: &translator.BinaryOp{
+				Left: &parser.BinaryOp{
 					Op: "AND",
-					Left: &translator.FieldQuery{
+					Left: &parser.FieldQuery{
 						Field: "product_code",
-						Value: "13w42",
+						Value: &parser.TermValue{Term: "13w42", Pos: parser.Position{}},
 					},
-					Right: &translator.FieldQuery{
+					Right: &parser.FieldQuery{
 						Field: "region",
-						Value: "ca",
+						Value: &parser.TermValue{Term: "ca", Pos: parser.Position{}},
 					},
 				},
-				Right: &translator.FieldQuery{
+				Right: &parser.FieldQuery{
 					Field: "status",
-					Value: "active",
+					Value: &parser.TermValue{Term: "active", Pos: parser.Position{}},
 				},
 			},
 		},

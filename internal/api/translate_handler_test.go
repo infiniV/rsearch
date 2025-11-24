@@ -14,46 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTranslateHandler_ParserNotImplemented(t *testing.T) {
-	// Setup registries
-	schemaRegistry := schema.NewRegistry()
-	translatorRegistry := translator.NewRegistry()
-
-	// Register test schema
-	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"product_code": {Type: schema.TypeText},
-	}, schema.SchemaOptions{})
-	schemaRegistry.Register(testSchema)
-
-	// Register postgres translator
-	translatorRegistry.Register("postgres", translator.NewPostgresTranslator())
-
-	// Create handler
-	handler := NewTranslateHandler(schemaRegistry, translatorRegistry)
-
-	// Create request
-	reqBody := TranslateRequest{
-		Schema:   "products",
-		Database: "postgres",
-		Query:    "productCode:13w42",
-	}
-	body, _ := json.Marshal(reqBody)
-
-	req := httptest.NewRequest("POST", "/api/v1/translate", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	// Execute
-	handler.ServeHTTP(w, req)
-
-	// Verify
-	assert.Equal(t, http.StatusNotImplemented, w.Code)
-
-	var response map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &response)
-	assert.Contains(t, response["error"], "Parser not implemented")
-}
-
 func TestTranslateHandler_InvalidJSON(t *testing.T) {
 	schemaRegistry := schema.NewRegistry()
 	translatorRegistry := translator.NewRegistry()

@@ -128,28 +128,6 @@ func TestServerIntegration(t *testing.T) {
 		}
 	})
 
-	// Test not implemented endpoint
-	t.Run("Not implemented endpoint", func(t *testing.T) {
-		resp, err := http.Post(fmt.Sprintf("http://%s/api/v1/schemas", cfg.GetAddress()), "application/json", nil)
-		if err != nil {
-			t.Fatalf("Failed to request schemas endpoint: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusNotImplemented {
-			t.Errorf("Expected status 501, got %d", resp.StatusCode)
-		}
-
-		var errResp rsearch.ErrorResponse
-		if err := json.NewDecoder(resp.Body).Decode(&errResp); err != nil {
-			t.Fatalf("Failed to decode error response: %v", err)
-		}
-
-		if errResp.Error.Code != "NOT_IMPLEMENTED" {
-			t.Errorf("Expected error code 'NOT_IMPLEMENTED', got '%s'", errResp.Error.Code)
-		}
-	})
-
 	// Test request ID header
 	t.Run("Request ID header", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", fmt.Sprintf("http://%s/health", cfg.GetAddress()), nil)
