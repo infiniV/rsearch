@@ -23,7 +23,7 @@ func TestPostgresTranslator_SimpleFieldQuery(t *testing.T) {
 
 	ast := &parser.FieldQuery{
 		Field: "product_code",
-		Value: "13w42",
+		Value: &parser.TermValue{Term: "13w42", Pos: parser.Position{}},
 	}
 
 	output, err := translator.Translate(ast, testSchema)
@@ -45,7 +45,7 @@ func TestPostgresTranslator_NumberFieldQuery(t *testing.T) {
 
 	ast := &parser.FieldQuery{
 		Field: "rod_length",
-		Value: "100",
+		Value: &parser.TermValue{Term: "100", Pos: parser.Position{}},
 	}
 
 	output, err := translator.Translate(ast, testSchema)
@@ -68,11 +68,11 @@ func TestPostgresTranslator_BooleanAND(t *testing.T) {
 		Op: "AND",
 		Left: &parser.FieldQuery{
 			Field: "product_code",
-			Value: "13w42",
+			Value: &parser.TermValue{Term: "13w42", Pos: parser.Position{}},
 		},
 		Right: &parser.FieldQuery{
 			Field: "region",
-			Value: "ca",
+			Value: &parser.TermValue{Term: "ca", Pos: parser.Position{}},
 		},
 	}
 
@@ -97,11 +97,11 @@ func TestPostgresTranslator_BooleanOR(t *testing.T) {
 		Op: "OR",
 		Left: &parser.FieldQuery{
 			Field: "region",
-			Value: "ca",
+			Value: &parser.TermValue{Term: "ca", Pos: parser.Position{}},
 		},
 		Right: &parser.FieldQuery{
 			Field: "region",
-			Value: "us",
+			Value: &parser.TermValue{Term: "us", Pos: parser.Position{}},
 		},
 	}
 
@@ -123,8 +123,8 @@ func TestPostgresTranslator_RangeQuery(t *testing.T) {
 
 	ast := &parser.RangeQuery{
 		Field:          "rod_length",
-		Start:          50,
-		End:            500,
+		Start:          &parser.NumberValue{Number: "50", Pos: parser.Position{}},
+		End:            &parser.NumberValue{Number: "500", Pos: parser.Position{}},
 		InclusiveStart: true,
 		InclusiveEnd:   true,
 	}
@@ -134,8 +134,8 @@ func TestPostgresTranslator_RangeQuery(t *testing.T) {
 	assert.NotNil(t, output)
 	assert.Equal(t, "rod_length BETWEEN $1 AND $2", output.WhereClause)
 	assert.Len(t, output.Parameters, 2)
-	assert.Equal(t, 50, output.Parameters[0])
-	assert.Equal(t, 500, output.Parameters[1])
+	assert.Equal(t, "50", output.Parameters[0])
+	assert.Equal(t, "500", output.Parameters[1])
 	assert.Equal(t, []string{"integer", "integer"}, output.ParameterTypes)
 }
 
@@ -148,8 +148,8 @@ func TestPostgresTranslator_RangeQuery_Exclusive(t *testing.T) {
 
 	ast := &parser.RangeQuery{
 		Field:          "price",
-		Start:          10,
-		End:            20,
+		Start:          &parser.NumberValue{Number: "10", Pos: parser.Position{}},
+		End:            &parser.NumberValue{Number: "20", Pos: parser.Position{}},
 		InclusiveStart: false,
 		InclusiveEnd:   false,
 	}
@@ -159,8 +159,8 @@ func TestPostgresTranslator_RangeQuery_Exclusive(t *testing.T) {
 	assert.NotNil(t, output)
 	assert.Equal(t, "price > $1 AND price < $2", output.WhereClause)
 	assert.Len(t, output.Parameters, 2)
-	assert.Equal(t, 10, output.Parameters[0])
-	assert.Equal(t, 20, output.Parameters[1])
+	assert.Equal(t, "10", output.Parameters[0])
+	assert.Equal(t, "20", output.Parameters[1])
 }
 
 func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
@@ -172,7 +172,7 @@ func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
 
 	ast := &parser.FieldQuery{
 		Field: "invalid_field",
-		Value: "test",
+		Value: &parser.TermValue{Term: "test", Pos: parser.Position{}},
 	}
 
 	output, err := translator.Translate(ast, testSchema)
@@ -197,16 +197,16 @@ func TestPostgresTranslator_ComplexNestedQuery(t *testing.T) {
 			Op: "AND",
 			Left: &parser.FieldQuery{
 				Field: "product_code",
-				Value: "13w42",
+				Value: &parser.TermValue{Term: "13w42", Pos: parser.Position{}},
 			},
 			Right: &parser.FieldQuery{
 				Field: "region",
-				Value: "ca",
+				Value: &parser.TermValue{Term: "ca", Pos: parser.Position{}},
 			},
 		},
 		Right: &parser.FieldQuery{
 			Field: "status",
-			Value: "active",
+			Value: &parser.TermValue{Term: "active", Pos: parser.Position{}},
 		},
 	}
 
@@ -236,16 +236,16 @@ func TestPostgresTranslator_ParameterNumbering(t *testing.T) {
 			Op: "AND",
 			Left: &parser.FieldQuery{
 				Field: "a",
-				Value: "1",
+				Value: &parser.TermValue{Term: "1", Pos: parser.Position{}},
 			},
 			Right: &parser.FieldQuery{
 				Field: "b",
-				Value: "2",
+				Value: &parser.TermValue{Term: "2", Pos: parser.Position{}},
 			},
 		},
 		Right: &parser.FieldQuery{
 			Field: "c",
-			Value: "3",
+			Value: &parser.TermValue{Term: "3", Pos: parser.Position{}},
 		},
 	}
 
@@ -358,7 +358,7 @@ func TestPostgresTranslator_ExistsQuery_WithOtherConditions(t *testing.T) {
 		},
 		Right: &parser.FieldQuery{
 			Field: "region",
-			Value: "ca",
+			Value: &parser.TermValue{Term: "ca", Pos: parser.Position{}},
 		},
 	}
 
@@ -410,7 +410,7 @@ func TestPostgresTranslator_ComplexExistsQuery(t *testing.T) {
 		},
 		Right: &parser.FieldQuery{
 			Field: "price",
-			Value: "100",
+			Value: &parser.TermValue{Term: "100", Pos: parser.Position{}},
 		},
 	}
 

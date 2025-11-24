@@ -23,7 +23,7 @@ func TestPostgresTranslator_BoostQuery_SimpleField(t *testing.T) {
 	ast := &parser.BoostQuery{
 		Query: &parser.FieldQuery{
 			Field: "name",
-			Value: "widget",
+			Value: &parser.TermValue{Term: "widget", Pos: parser.Position{}},
 		},
 		Boost: 2.0,
 	}
@@ -60,7 +60,7 @@ func TestPostgresTranslator_BoostQuery_HighBoost(t *testing.T) {
 	ast := &parser.BoostQuery{
 		Query: &parser.FieldQuery{
 			Field: "name",
-			Value: "widget",
+			Value: &parser.TermValue{Term: "widget", Pos: parser.Position{}},
 		},
 		Boost: 4.0,
 	}
@@ -92,13 +92,13 @@ func TestPostgresTranslator_BoostQuery_WithBinaryOp(t *testing.T) {
 		Left: &parser.BoostQuery{
 			Query: &parser.FieldQuery{
 				Field: "name",
-				Value: "widget",
+				Value: &parser.TermValue{Term: "widget", Pos: parser.Position{}},
 			},
 			Boost: 2.0,
 		},
 		Right: &parser.FieldQuery{
 			Field: "status",
-			Value: "active",
+			Value: &parser.TermValue{Term: "active", Pos: parser.Position{}},
 		},
 	}
 
@@ -133,14 +133,14 @@ func TestPostgresTranslator_BoostQuery_MultipleBoosts(t *testing.T) {
 		Left: &parser.BoostQuery{
 			Query: &parser.FieldQuery{
 				Field: "name",
-				Value: "widget",
+				Value: &parser.TermValue{Term: "widget", Pos: parser.Position{}},
 			},
 			Boost: 2.0,
 		},
 		Right: &parser.BoostQuery{
 			Query: &parser.FieldQuery{
 				Field: "description",
-				Value: "gadget",
+				Value: &parser.TermValue{Term: "gadget", Pos: parser.Position{}},
 			},
 			Boost: 3.0,
 		},
@@ -177,11 +177,11 @@ func TestPostgresTranslator_BoostQuery_NestedBoost(t *testing.T) {
 			Op: "AND",
 			Left: &parser.FieldQuery{
 				Field: "name",
-				Value: "widget",
+				Value: &parser.TermValue{Term: "widget", Pos: parser.Position{}},
 			},
 			Right: &parser.FieldQuery{
 				Field: "region",
-				Value: "us",
+				Value: &parser.TermValue{Term: "us", Pos: parser.Position{}},
 			},
 		},
 		Boost: 2.0,
@@ -215,8 +215,8 @@ func TestPostgresTranslator_BoostQuery_RangeQuery(t *testing.T) {
 	ast := &parser.BoostQuery{
 		Query: &parser.RangeQuery{
 			Field:          "price",
-			Start:          10,
-			End:            100,
+			Start:          &parser.NumberValue{Number: "10", Pos: parser.Position{}},
+			End:            &parser.NumberValue{Number: "100", Pos: parser.Position{}},
 			InclusiveStart: true,
 			InclusiveEnd:   true,
 		},

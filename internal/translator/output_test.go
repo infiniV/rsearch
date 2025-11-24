@@ -1,7 +1,6 @@
 package translator
 
 import (
-        "github.com/infiniv/rsearch/internal/parser"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

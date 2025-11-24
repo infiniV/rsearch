@@ -13,6 +13,7 @@ type PostgresTranslator struct {
 	paramCount int
 	params     []interface{}
 	paramTypes []string
+	boosts     []map[string]interface{}
 }
 
 // NewPostgresTranslator creates a new PostgreSQL translator.
@@ -31,13 +32,24 @@ func (p *PostgresTranslator) Translate(ast parser.Node, schema *schema.Schema) (
 	p.paramCount = 0
 	p.params = make([]interface{}, 0)
 	p.paramTypes = make([]string, 0)
+	p.boosts = make([]map[string]interface{}, 0)
 
 	whereClause, err := p.translateNode(ast, schema)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewSQLOutput(whereClause, p.params, p.paramTypes), nil
+	output := NewSQLOutput(whereClause, p.params, p.paramTypes)
+
+	// Add boost metadata if any boosts were collected
+	if len(p.boosts) > 0 {
+		if output.Metadata == nil {
+			output.Metadata = make(map[string]interface{})
+		}
+		output.Metadata["boosts"] = p.boosts
+	}
+
+	return output, nil
 }
 
 // translateNode recursively translates AST nodes.
@@ -53,6 +65,8 @@ func (p *PostgresTranslator) translateNode(node parser.Node, schema *schema.Sche
 		return p.translateUnaryOp(n, schema)
 	case *parser.ExistsQuery:
 		return p.translateExistsQuery(n, schema)
+	case *parser.BoostQuery:
+		return p.translateBoostQuery(n, schema)
 	default:
 		return "", fmt.Errorf("unsupported node type: %s", node.Type())
 	}
@@ -120,64 +134,90 @@ func (p *PostgresTranslator) translateRangeQuery(rq *parser.RangeQuery, schema *
 		return "", fmt.Errorf("field %s not found in schema %s", rq.Field, schema.Name)
 	}
 
-	// Note: Searchable field removed as it's not in the current schema design
-	_ = field // Use field if needed later
+	// Check for wildcard boundaries
+	startIsWildcard := p.isWildcard(rq.Start)
+	endIsWildcard := p.isWildcard(rq.End)
 
-	// Handle inclusive vs exclusive ranges
-	if rq.InclusiveStart && rq.InclusiveEnd {
+	// Handle fully bounded ranges (no wildcards)
+	if !startIsWildcard && !endIsWildcard && rq.InclusiveStart && rq.InclusiveEnd {
 		// Both inclusive: BETWEEN
 		p.paramCount++
-		p.params = append(p.params, rq.Start)
+		p.params = append(p.params, rq.Start.Value())
 		p.paramTypes = append(p.paramTypes, string(field.Type))
 
 		p.paramCount++
-		p.params = append(p.params, rq.End)
+		p.params = append(p.params, rq.End.Value())
 		p.paramTypes = append(p.paramTypes, string(field.Type))
 
 		return fmt.Sprintf("%s BETWEEN $%d AND $%d", columnName, p.paramCount-1, p.paramCount), nil
 	}
 
-	// Mixed or exclusive ranges: use comparison operators
+	// Mixed or exclusive ranges, or unbounded ranges: use comparison operators
 	var clauses []string
 
-	// Start condition
-	p.paramCount++
-	p.params = append(p.params, rq.Start)
-	p.paramTypes = append(p.paramTypes, string(field.Type))
+	// Start condition (if not wildcard)
+	if !startIsWildcard {
+		p.paramCount++
+		p.params = append(p.params, rq.Start.Value())
+		p.paramTypes = append(p.paramTypes, string(field.Type))
 
-	if rq.InclusiveStart {
-		clauses = append(clauses, fmt.Sprintf("%s >= $%d", columnName, p.paramCount))
-	} else {
-		clauses = append(clauses, fmt.Sprintf("%s > $%d", columnName, p.paramCount))
+		if rq.InclusiveStart {
+			clauses = append(clauses, fmt.Sprintf("%s >= $%d", columnName, p.paramCount))
+		} else {
+			clauses = append(clauses, fmt.Sprintf("%s > $%d", columnName, p.paramCount))
+		}
 	}
 
-	// End condition
-	p.paramCount++
-	p.params = append(p.params, rq.End)
-	p.paramTypes = append(p.paramTypes, string(field.Type))
+	// End condition (if not wildcard)
+	if !endIsWildcard {
+		p.paramCount++
+		p.params = append(p.params, rq.End.Value())
+		p.paramTypes = append(p.paramTypes, string(field.Type))
 
-	if rq.InclusiveEnd {
-		clauses = append(clauses, fmt.Sprintf("%s <= $%d", columnName, p.paramCount))
-	} else {
-		clauses = append(clauses, fmt.Sprintf("%s < $%d", columnName, p.paramCount))
+		if rq.InclusiveEnd {
+			clauses = append(clauses, fmt.Sprintf("%s <= $%d", columnName, p.paramCount))
+		} else {
+			clauses = append(clauses, fmt.Sprintf("%s < $%d", columnName, p.paramCount))
+		}
 	}
 
 	return strings.Join(clauses, " AND "), nil
 }
 
-// translateUnaryOp translates NOT operations.
+// isWildcard checks if a ValueNode represents a wildcard (*).
+func (p *PostgresTranslator) isWildcard(v parser.ValueNode) bool {
+	if v == nil {
+		return false
+	}
+	val := v.Value()
+	if strVal, ok := val.(string); ok {
+		return strVal == "*"
+	}
+	return false
+}
+
+// translateUnaryOp translates unary operations (+, -, NOT).
 func (p *PostgresTranslator) translateUnaryOp(uo *parser.UnaryOp, schema *schema.Schema) (string, error) {
 	operand, err := p.translateNode(uo.Operand, schema)
 	if err != nil {
 		return "", err
 	}
 
-	// Wrap in parentheses if needed (for complex expressions or JSON exists checks)
-	if p.needsParenthesesForNot(uo.Operand, operand) {
-		operand = fmt.Sprintf("(%s)", operand)
+	// Handle different operators
+	switch uo.Op {
+	case "+":
+		// Required operator - just pass through
+		return operand, nil
+	case "-", "NOT":
+		// Prohibited or NOT operator - add NOT
+		// Wrap in parentheses if needed (for complex expressions or JSON exists checks)
+		if p.needsParenthesesForNot(uo.Operand, operand) {
+			operand = fmt.Sprintf("(%s)", operand)
+		}
+		return fmt.Sprintf("NOT %s", operand), nil
+	default:
+		return "", fmt.Errorf("unsupported unary operator: %s", uo.Op)
 	}
-
-	return fmt.Sprintf("NOT %s", operand), nil
 }
 
 // needsParenthesesForNot determines if operand needs parentheses in NOT context
@@ -209,4 +249,40 @@ func (p *PostgresTranslator) translateExistsQuery(eq *parser.ExistsQuery, schema
 
 	// For regular fields: simple IS NOT NULL check
 	return fmt.Sprintf("%s IS NOT NULL", columnName), nil
+}
+
+// translateBoostQuery translates boost queries (query^boost).
+// For SQL databases, boost is stored in metadata; the SQL is the same as the wrapped query.
+func (p *PostgresTranslator) translateBoostQuery(bq *parser.BoostQuery, schema *schema.Schema) (string, error) {
+	// Translate the wrapped query
+	sql, err := p.translateNode(bq.Query, schema)
+	if err != nil {
+		return "", err
+	}
+
+	// Store boost metadata with snake_case query type
+	queryType := p.toSnakeCase(bq.Query.Type())
+	boostInfo := map[string]interface{}{
+		"query": queryType,
+		"boost": bq.Boost,
+	}
+	p.boosts = append(p.boosts, boostInfo)
+
+	return sql, nil
+}
+
+// toSnakeCase converts CamelCase to snake_case
+func (p *PostgresTranslator) toSnakeCase(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			result.WriteRune('_')
+		}
+		if r >= 'A' && r <= 'Z' {
+			result.WriteRune(r - 'A' + 'a')
+		} else {
+			result.WriteRune(r)
+		}
+	}
+	return result.String()
 }
