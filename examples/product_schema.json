@@ -1,0 +1,51 @@
+{
+  "name": "products",
+  "fields": {
+    "productCode": {
+      "type": "text",
+      "indexed": true,
+      "aliases": ["code", "sku", "itemCode"]
+    },
+    "productName": {
+      "type": "text",
+      "indexed": true,
+      "aliases": ["name", "title"]
+    },
+    "description": {
+      "type": "text"
+    },
+    "price": {
+      "type": "float"
+    },
+    "quantity": {
+      "type": "integer",
+      "aliases": ["stock", "inventory"]
+    },
+    "inStock": {
+      "type": "boolean"
+    },
+    "categoryId": {
+      "type": "integer"
+    },
+    "tags": {
+      "type": "array"
+    },
+    "metadata": {
+      "type": "json"
+    },
+    "createdAt": {
+      "type": "datetime",
+      "column": "created_timestamp"
+    },
+    "updatedAt": {
+      "type": "datetime",
+      "column": "updated_timestamp"
+    }
+  },
+  "options": {
+    "namingConvention": "snake_case",
+    "strictFieldNames": false,
+    "strictOperators": true,
+    "defaultField": "productName"
+  }
+}
