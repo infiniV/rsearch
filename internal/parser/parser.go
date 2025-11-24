@@ -227,7 +227,8 @@ func (p *Parser) parseGroupExpression() Node {
 // parseNotExpression parses NOT expr
 func (p *Parser) parseNotExpression() Node {
 	pos := p.current.Position
-	op := p.current.Literal
+	// Normalize to keyword form
+	op := "NOT"
 	p.nextToken()
 
 	operand := p.parseExpression(NOT_PREC)
@@ -268,7 +269,18 @@ func (p *Parser) parseProhibitedExpression() Node {
 // parseBinaryExpression parses left OP right
 func (p *Parser) parseBinaryExpression(left Node) Node {
 	pos := p.current.Position
-	op := p.current.Literal
+
+	// Normalize operator to keyword form
+	var op string
+	switch p.current.Type {
+	case AND:
+		op = "AND"
+	case OR:
+		op = "OR"
+	default:
+		op = p.current.Literal
+	}
+
 	precedence := p.currentPrecedence()
 
 	p.nextToken()

@@ -182,8 +182,8 @@ func TestParser_BooleanOperators(t *testing.T) {
 				if !ok {
 					t.Fatalf("expected UnaryOp, got %T", node)
 				}
-				if unary.Op != "!" {
-					t.Errorf("expected ! operator, got %q", unary.Op)
+				if unary.Op != "NOT" {
+					t.Errorf("expected NOT operator (normalized from !), got %q", unary.Op)
 				}
 			},
 		},
