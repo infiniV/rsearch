@@ -39,3 +39,13 @@ type RangeQuery struct {
 func (r *RangeQuery) Type() string {
 	return "range_query"
 }
+
+// UnaryOp represents a unary operation (NOT, +, -).
+type UnaryOp struct {
+	Op      string // "NOT", "+", "-"
+	Operand Node
+}
+
+func (u *UnaryOp) Type() string {
+	return "unary_op"
+}

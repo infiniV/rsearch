@@ -46,6 +46,8 @@ func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (st
 		return p.translateFieldQuery(n, schema)
 	case *BinaryOp:
 		return p.translateBinaryOp(n, schema)
+	case *UnaryOp:
+		return p.translateUnaryOp(n, schema)
 	case *RangeQuery:
 		return p.translateRangeQuery(n, schema)
 	default:
@@ -105,6 +107,34 @@ func (p *PostgresTranslator) needsParentheses(node Node) bool {
 	// Binary operations need parentheses when nested
 	_, isBinaryOp := node.(*BinaryOp)
 	return isBinaryOp
+}
+
+// translateUnaryOp translates unary operations (NOT, +, -).
+func (p *PostgresTranslator) translateUnaryOp(uo *UnaryOp, schema *schema.Schema) (string, error) {
+	operand, err := p.translateNode(uo.Operand, schema)
+	if err != nil {
+		return "", err
+	}
+
+	// Determine if operand needs parentheses
+	operandNeedsParens := p.needsParentheses(uo.Operand)
+	if operandNeedsParens {
+		operand = fmt.Sprintf("(%s)", operand)
+	}
+
+	switch uo.Op {
+	case "NOT":
+		return fmt.Sprintf("NOT %s", operand), nil
+	case "+":
+		// Required term: in SQL this means the condition must be true
+		// We can treat it as a simple assertion
+		return operand, nil
+	case "-":
+		// Prohibited term: in SQL this means the condition must NOT be true
+		return fmt.Sprintf("NOT %s", operand), nil
+	default:
+		return "", fmt.Errorf("unsupported unary operator: %s", uo.Op)
+	}
 }
 
 // translateRangeQuery translates range queries like field:[start TO end].
