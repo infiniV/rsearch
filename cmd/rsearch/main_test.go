@@ -11,6 +11,8 @@ import (
 	"github.com/infiniv/rsearch/internal/api"
 	"github.com/infiniv/rsearch/internal/config"
 	"github.com/infiniv/rsearch/internal/observability"
+	"github.com/infiniv/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/translator"
 	"github.com/infiniv/rsearch/pkg/rsearch"
 )
 
@@ -46,8 +48,12 @@ func TestServerIntegration(t *testing.T) {
 		t.Fatalf("Failed to create logger: %v", err)
 	}
 
-	// Setup routes
-	router := api.SetupRoutes(cfg, logger, nil)
+	// Setup routes with registries
+	schemaRegistry := schema.NewRegistry()
+	translatorRegistry := translator.NewRegistry()
+	translatorRegistry.Register("postgres", translator.NewPostgresTranslator())
+
+	router := api.SetupRoutes(cfg, logger, nil, schemaRegistry, translatorRegistry)
 
 	// Create server
 	server := &http.Server{

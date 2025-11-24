@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/raw/rsearch/internal/schema"
-	"github.com/raw/rsearch/internal/translator"
+	"github.com/infiniv/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/translator"
 )
 
 // TranslateRequest represents the request body for the translate endpoint.
@@ -23,11 +23,6 @@ type TranslateResponse struct {
 	Parameters     []interface{} `json:"parameters,omitempty"`
 	ParameterTypes []string      `json:"parameterTypes,omitempty"`
 	Filter         interface{}   `json:"filter,omitempty"`
-}
-
-// ErrorResponse represents an error response.
-type ErrorResponse struct {
-	Error string `json:"error"`
 }
 
 // TranslateHandler handles translation requests.

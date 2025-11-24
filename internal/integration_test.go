@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/raw/rsearch/internal/api"
-	"github.com/raw/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/api"
+	"github.com/infiniv/rsearch/internal/schema"
 )
 
 // TestIntegration_CompleteWorkflow tests the complete schema registration and field resolution workflow

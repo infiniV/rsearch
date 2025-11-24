@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/raw/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/schema"
 )
 
 // PostgresTranslator translates AST nodes to PostgreSQL queries.
@@ -56,23 +56,21 @@ func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (st
 // translateFieldQuery translates a simple field:value query.
 func (p *PostgresTranslator) translateFieldQuery(fq *FieldQuery, schema *schema.Schema) (string, error) {
 	// Validate field exists in schema
-	field, err := schema.GetField(fq.Field)
+	columnName, field, err := schema.ResolveField(fq.Field)
 	if err != nil {
 		return "", fmt.Errorf("field %s not found in schema %s", fq.Field, schema.Name)
 	}
 
-	// Validate field is searchable
-	if !field.Searchable {
-		return "", fmt.Errorf("field %s is not searchable", fq.Field)
-	}
+	// Note: Searchable field removed as it's not in the current schema design
+	_ = field // Use field if needed later
 
 	// Add parameter
 	p.paramCount++
 	p.params = append(p.params, fq.Value)
-	p.paramTypes = append(p.paramTypes, field.Type)
+	p.paramTypes = append(p.paramTypes, string(string(field.Type)))
 
-	// Generate SQL with parameterized query
-	return fmt.Sprintf("%s = $%d", fq.Field, p.paramCount), nil
+	// Generate SQL with parameterized query (use resolved column name)
+	return fmt.Sprintf("%s = $%d", columnName, p.paramCount), nil
 }
 
 // translateBinaryOp translates AND/OR operations.
@@ -112,28 +110,26 @@ func (p *PostgresTranslator) needsParentheses(node Node) bool {
 // translateRangeQuery translates range queries like field:[start TO end].
 func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.Schema) (string, error) {
 	// Validate field exists in schema
-	field, err := schema.GetField(rq.Field)
+	columnName, field, err := schema.ResolveField(rq.Field)
 	if err != nil {
 		return "", fmt.Errorf("field %s not found in schema %s", rq.Field, schema.Name)
 	}
 
-	// Validate field is searchable
-	if !field.Searchable {
-		return "", fmt.Errorf("field %s is not searchable", rq.Field)
-	}
+	// Note: Searchable field removed as it's not in the current schema design
+	_ = field // Use field if needed later
 
 	// Handle inclusive vs exclusive ranges
 	if rq.InclusiveStart && rq.InclusiveEnd {
 		// Both inclusive: BETWEEN
 		p.paramCount++
 		p.params = append(p.params, rq.Start)
-		p.paramTypes = append(p.paramTypes, field.Type)
+		p.paramTypes = append(p.paramTypes, string(field.Type))
 
 		p.paramCount++
 		p.params = append(p.params, rq.End)
-		p.paramTypes = append(p.paramTypes, field.Type)
+		p.paramTypes = append(p.paramTypes, string(field.Type))
 
-		return fmt.Sprintf("%s BETWEEN $%d AND $%d", rq.Field, p.paramCount-1, p.paramCount), nil
+		return fmt.Sprintf("%s BETWEEN $%d AND $%d", columnName, p.paramCount-1, p.paramCount), nil
 	}
 
 	// Mixed or exclusive ranges: use comparison operators
@@ -142,23 +138,23 @@ func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.
 	// Start condition
 	p.paramCount++
 	p.params = append(p.params, rq.Start)
-	p.paramTypes = append(p.paramTypes, field.Type)
+	p.paramTypes = append(p.paramTypes, string(field.Type))
 
 	if rq.InclusiveStart {
-		clauses = append(clauses, fmt.Sprintf("%s >= $%d", rq.Field, p.paramCount))
+		clauses = append(clauses, fmt.Sprintf("%s >= $%d", columnName, p.paramCount))
 	} else {
-		clauses = append(clauses, fmt.Sprintf("%s > $%d", rq.Field, p.paramCount))
+		clauses = append(clauses, fmt.Sprintf("%s > $%d", columnName, p.paramCount))
 	}
 
 	// End condition
 	p.paramCount++
 	p.params = append(p.params, rq.End)
-	p.paramTypes = append(p.paramTypes, field.Type)
+	p.paramTypes = append(p.paramTypes, string(field.Type))
 
 	if rq.InclusiveEnd {
-		clauses = append(clauses, fmt.Sprintf("%s <= $%d", rq.Field, p.paramCount))
+		clauses = append(clauses, fmt.Sprintf("%s <= $%d", columnName, p.paramCount))
 	} else {
-		clauses = append(clauses, fmt.Sprintf("%s < $%d", rq.Field, p.paramCount))
+		clauses = append(clauses, fmt.Sprintf("%s < $%d", columnName, p.paramCount))
 	}
 
 	return strings.Join(clauses, " AND "), nil

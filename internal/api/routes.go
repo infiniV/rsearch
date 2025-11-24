@@ -1,8 +1,6 @@
 package api
 
 import (
-	"net/http"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/infiniv/rsearch/internal/config"
 	"github.com/infiniv/rsearch/internal/observability"
@@ -16,8 +14,8 @@ func SetupRoutes(cfg *config.Config, logger *observability.Logger, metrics *obse
 
 	// Create handlers
 	handlers := NewHandlers(cfg, logger, metrics)
-	schemaHandler := NewSchemaHandler(schemaRegistry, logger)
-	translateHandler := NewTranslateHandler(schemaRegistry, translatorRegistry, logger)
+	schemaHandler := NewHandler(schemaRegistry)
+	translateHandler := NewTranslateHandler(schemaRegistry, translatorRegistry)
 
 	// Global middleware
 	r.Use(RequestIDMiddleware(cfg))
@@ -48,7 +46,7 @@ func SetupRoutes(cfg *config.Config, logger *observability.Logger, metrics *obse
 		r.Delete("/schemas/{name}", schemaHandler.DeleteSchema)
 
 		// Translation endpoint
-		r.Post("/translate", translateHandler.Translate)
+		r.Post("/translate", translateHandler.ServeHTTP)
 	})
 
 	return r

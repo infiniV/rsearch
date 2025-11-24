@@ -3,7 +3,7 @@ package translator
 import (
 	"testing"
 
-	"github.com/raw/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

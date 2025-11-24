@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/raw/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/schema"
 )
 
 // Handler handles HTTP API requests for schema management

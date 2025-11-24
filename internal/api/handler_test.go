@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/raw/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/schema"
 )
 
 func TestRegisterSchema_Success(t *testing.T) {

@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/raw/rsearch/internal/schema"
-	"github.com/raw/rsearch/internal/translator"
+	"github.com/infiniv/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/translator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

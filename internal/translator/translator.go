@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/raw/rsearch/internal/schema"
+	"github.com/infiniv/rsearch/internal/schema"
 )
 
 // Translator converts AST nodes to database-specific query formats.
