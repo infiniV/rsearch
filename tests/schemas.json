@@ -1,0 +1,36 @@
+{
+  "products": {
+    "name": "products",
+    "fields": {
+      "productCode": {"type": "text"},
+      "name": {"type": "text"},
+      "description": {"type": "text"},
+      "rodLength": {"type": "integer"},
+      "price": {"type": "float"},
+      "region": {"type": "text"},
+      "inStock": {"type": "boolean"},
+      "status": {"type": "text"},
+      "tags": {"type": "array"},
+      "metadata": {"type": "json"},
+      "createdAt": {"type": "datetime"}
+    },
+    "options": {
+      "namingConvention": "snake_case",
+      "strictOperators": false,
+      "strictFieldNames": false
+    }
+  },
+  "users": {
+    "name": "users",
+    "fields": {
+      "username": {"type": "text"},
+      "email": {"type": "text"},
+      "age": {"type": "integer"},
+      "active": {"type": "boolean"},
+      "joinedAt": {"type": "datetime"}
+    },
+    "options": {
+      "namingConvention": "snake_case"
+    }
+  }
+}

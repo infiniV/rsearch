@@ -1,0 +1,203 @@
+[
+  {
+    "category": "Field Queries",
+    "description": "Simple field match",
+    "query": "productCode:13w42",
+    "schema": "products",
+    "expected": {
+      "sql": "product_code = $1",
+      "parameters": ["13w42"],
+      "parameterTypes": ["text"]
+    }
+  },
+  {
+    "category": "Field Queries",
+    "description": "Numeric field match",
+    "query": "rodLength:150",
+    "schema": "products",
+    "expected": {
+      "sql": "rod_length = $1",
+      "parameters": ["150"],
+      "parameterTypes": ["integer"]
+    }
+  },
+  {
+    "category": "Boolean Operators",
+    "description": "AND with two fields",
+    "query": "productCode:13w42 AND region:ca",
+    "schema": "products",
+    "expected": {
+      "sql": "product_code = $1 AND region = $2",
+      "parameters": ["13w42", "ca"],
+      "parameterTypes": ["text", "text"]
+    }
+  },
+  {
+    "category": "Boolean Operators",
+    "description": "OR with two fields",
+    "query": "region:ca OR region:ny",
+    "schema": "products",
+    "expected": {
+      "sql": "region = $1 OR region = $2",
+      "parameters": ["ca", "ny"],
+      "parameterTypes": ["text", "text"]
+    }
+  },
+  {
+    "category": "Boolean Operators",
+    "description": "NOT operator",
+    "query": "region:ca AND NOT status:discontinued",
+    "schema": "products",
+    "expected": {
+      "sql": "region = $1 AND NOT status = $2",
+      "parameters": ["ca", "discontinued"],
+      "parameterTypes": ["text", "text"]
+    }
+  },
+  {
+    "category": "Range Queries",
+    "description": "Inclusive range with brackets",
+    "query": "rodLength:[50 TO 500]",
+    "schema": "products",
+    "expected": {
+      "sql": "rod_length BETWEEN $1 AND $2",
+      "parameters": ["50", "500"],
+      "parameterTypes": ["integer", "integer"]
+    }
+  },
+  {
+    "category": "Range Queries",
+    "description": "Exclusive range with braces",
+    "query": "price:{10 TO 20}",
+    "schema": "products",
+    "expected": {
+      "sql": "price > $1 AND price < $2",
+      "parameters": ["10", "20"],
+      "parameterTypes": ["float", "float"]
+    }
+  },
+  {
+    "category": "Range Queries",
+    "description": "Greater than or equal comparison",
+    "query": "price:>=100",
+    "schema": "products",
+    "expected": {
+      "sql": "price >= $1",
+      "parameters": ["100"],
+      "parameterTypes": ["float"]
+    }
+  },
+  {
+    "category": "Range Queries",
+    "description": "Less than comparison",
+    "query": "rodLength:<200",
+    "schema": "products",
+    "expected": {
+      "sql": "rod_length < $1",
+      "parameters": ["200"],
+      "parameterTypes": ["integer"]
+    }
+  },
+  {
+    "category": "Wildcards",
+    "description": "Wildcard suffix",
+    "query": "name:widget*",
+    "schema": "products",
+    "expected": {
+      "sql": "name LIKE $1",
+      "parameters": ["widget%"],
+      "parameterTypes": ["text"]
+    }
+  },
+  {
+    "category": "Wildcards",
+    "description": "Wildcard prefix",
+    "query": "name:*widget",
+    "schema": "products",
+    "expected": {
+      "sql": "name LIKE $1",
+      "parameters": ["%widget"],
+      "parameterTypes": ["text"]
+    }
+  },
+  {
+    "category": "Wildcards",
+    "description": "Single character wildcard",
+    "query": "productCode:13w4?",
+    "schema": "products",
+    "expected": {
+      "sql": "product_code LIKE $1",
+      "parameters": ["13w4_"],
+      "parameterTypes": ["text"]
+    }
+  },
+  {
+    "category": "Regex",
+    "description": "Regex pattern",
+    "query": "name:/wi[dg]get/",
+    "schema": "products",
+    "expected": {
+      "sql": "name ~ $1",
+      "parameters": ["wi[dg]get"],
+      "parameterTypes": ["text"]
+    }
+  },
+  {
+    "category": "Boost Queries",
+    "description": "Boost field query",
+    "query": "name:laptop^2",
+    "schema": "products",
+    "expected": {
+      "sql": "name = $1",
+      "parameters": ["laptop"],
+      "parameterTypes": ["text"],
+      "metadata": {
+        "boosts": [{"query": "field_query", "boost": 2}]
+      }
+    }
+  },
+  {
+    "category": "Exists Queries",
+    "description": "Field exists",
+    "query": "_exists_:description",
+    "schema": "products",
+    "expected": {
+      "sql": "description IS NOT NULL",
+      "parameters": [],
+      "parameterTypes": []
+    }
+  },
+  {
+    "category": "Exists Queries",
+    "description": "Field does not exist",
+    "query": "NOT _exists_:description",
+    "schema": "products",
+    "expected": {
+      "sql": "NOT description IS NOT NULL",
+      "parameters": [],
+      "parameterTypes": []
+    }
+  },
+  {
+    "category": "Complex Queries",
+    "description": "Nested boolean with ranges",
+    "query": "(productCode:13w42 AND region:ca) OR rodLength:[50 TO 500]",
+    "schema": "products",
+    "expected": {
+      "sql": "(product_code = $1 AND region = $2) OR rod_length BETWEEN $3 AND $4",
+      "parameters": ["13w42", "ca", "50", "500"],
+      "parameterTypes": ["text", "text", "integer", "integer"]
+    }
+  },
+  {
+    "category": "Complex Queries",
+    "description": "Multiple conditions with wildcards",
+    "query": "name:widget* AND price:>=50 AND region:ca",
+    "schema": "products",
+    "expected": {
+      "sql": "name LIKE $1 AND price >= $2 AND region = $3",
+      "parameters": ["widget%", "50", "ca"],
+      "parameterTypes": ["text", "float", "text"]
+    }
+  }
+]
