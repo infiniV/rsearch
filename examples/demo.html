@@ -31,69 +31,91 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: var(--font-sans);
             background: var(--background);
             color: var(--foreground);
-            min-height: 100vh;
             line-height: 1.5;
         }
 
         .container {
-            max-width: 1600px;
+            max-width: 100%;
+            height: 100vh;
             margin: 0 auto;
-            padding: 24px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         header {
             text-align: center;
-            margin-bottom: 24px;
-            padding-bottom: 20px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
             border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
         header h1 {
-            font-size: 1.75rem;
+            font-size: 1.4rem;
             color: var(--card-foreground);
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             font-weight: 600;
         }
 
         header p {
             color: var(--muted-foreground);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
 
         .main-grid {
             display: grid;
-            grid-template-columns: 280px 1fr 380px;
-            gap: 20px;
+            grid-template-columns: 240px 1fr 320px;
+            gap: 12px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .sidebar {
-            position: sticky;
-            top: 24px;
-            align-self: start;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .sidebar .card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .card {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 16px;
+            padding: 12px;
         }
 
         .card h2 {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--muted-foreground);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             font-weight: 500;
+            flex-shrink: 0;
         }
 
         .example-queries {
-            max-height: calc(100vh - 200px);
+            flex: 1;
             overflow-y: auto;
             scrollbar-width: thin;
         }
@@ -138,14 +160,17 @@
         .main-content {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .query-section {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 16px;
+            padding: 12px;
+            flex-shrink: 0;
         }
 
         .input-row {
@@ -222,8 +247,21 @@
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 16px;
+            padding: 12px;
             flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .tabs {
@@ -255,7 +293,6 @@
         }
 
         .tab-content { display: none; }
-        .tab-content.active { display: block; }
 
         .result-block { margin-bottom: 16px; }
         .result-block:last-child { margin-bottom: 0; }
@@ -315,15 +352,18 @@
 
         /* Database Results Panel */
         .db-panel {
-            position: sticky;
-            top: 24px;
-            align-self: start;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .db-panel .card {
-            max-height: calc(100vh - 80px);
+            flex: 1;
             display: flex;
             flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .db-results {
@@ -440,6 +480,147 @@
             .example-queries { max-height: 250px; }
             .container { padding: 16px; }
         }
+
+        /* Markdown rendering styles */
+        .md-content {
+            line-height: 1.6;
+        }
+
+        .md-content p {
+            margin-bottom: 12px;
+        }
+
+        .md-h2 {
+            font-size: 1.2rem;
+            color: var(--card-foreground);
+            margin: 20px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .md-h3 {
+            font-size: 1rem;
+            color: var(--primary);
+            margin: 16px 0 10px 0;
+        }
+
+        .md-h4 {
+            font-size: 0.85rem;
+            color: var(--foreground);
+            margin: 12px 0 8px 0;
+        }
+
+        .md-code {
+            background: var(--muted);
+            padding: 10px 12px;
+            border-radius: calc(var(--radius) - 2px);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            overflow-x: auto;
+            margin: 8px 0;
+            white-space: pre;
+        }
+
+        .md-code.sql {
+            color: #a5d6ff;
+        }
+
+        .md-code.json {
+            color: #7ee787;
+        }
+
+        .md-inline {
+            background: var(--accent);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--primary);
+        }
+
+        .md-hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 16px 0;
+        }
+
+        .md-link {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .md-link:hover {
+            text-decoration: underline;
+        }
+
+        .md-content li {
+            margin-left: 20px;
+            margin-bottom: 4px;
+        }
+
+        /* Autocomplete styles */
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--popover);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: var(--accent);
+        }
+
+        .autocomplete-item .syntax {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--primary);
+        }
+
+        .autocomplete-item .desc {
+            font-size: 0.7rem;
+            color: var(--muted-foreground);
+        }
+
+        .autocomplete-category {
+            padding: 4px 12px;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--muted-foreground);
+            background: var(--muted);
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 <body>
@@ -460,7 +641,10 @@
             <div class="main-content">
                 <div class="query-section">
                     <div class="input-row">
-                        <input type="text" id="queryInput" placeholder="productCode:13w42 AND region:ca" autocomplete="off" />
+                        <div class="input-wrapper">
+                            <input type="text" id="queryInput" placeholder="productCode:13w42 AND region:ca" autocomplete="off" />
+                            <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+                        </div>
                         <button id="translateBtn">Translate</button>
                         <button id="executeBtn" class="secondary">Execute</button>
                         <button id="clearBtn" class="secondary">Clear</button>
@@ -531,7 +715,10 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8080';
+        // Auto-detect host (works for both localhost and WSL IP)
+        const HOST = window.location.hostname;
+        const API_URL = `http://${HOST}:8080`;
+        const DEMO_SERVER = `http://${HOST}:3000`;
         const SCHEMA = 'products';
         const DATABASE = 'postgres';
 
@@ -639,9 +826,181 @@
             }
         ];
 
+        // Autocomplete suggestions
+        const autocompleteSuggestions = [
+            // Fields (from schema)
+            { type: 'field', text: 'productCode:', desc: 'Product code field' },
+            { type: 'field', text: 'name:', desc: 'Product name field' },
+            { type: 'field', text: 'description:', desc: 'Description field' },
+            { type: 'field', text: 'rodLength:', desc: 'Rod length (integer)' },
+            { type: 'field', text: 'price:', desc: 'Price (float)' },
+            { type: 'field', text: 'region:', desc: 'Region field' },
+            { type: 'field', text: 'status:', desc: 'Status field' },
+            { type: 'field', text: 'inStock:', desc: 'In stock (boolean)' },
+            // Operators
+            { type: 'operator', text: 'AND ', desc: 'Both conditions must match' },
+            { type: 'operator', text: 'OR ', desc: 'Either condition matches' },
+            { type: 'operator', text: 'NOT ', desc: 'Negates condition' },
+            // Range syntax
+            { type: 'range', text: ':[* TO *]', desc: 'Inclusive range' },
+            { type: 'range', text: ':{* TO *}', desc: 'Exclusive range' },
+            { type: 'range', text: ':>=', desc: 'Greater than or equal' },
+            { type: 'range', text: ':<=', desc: 'Less than or equal' },
+            { type: 'range', text: ':>', desc: 'Greater than' },
+            { type: 'range', text: ':<', desc: 'Less than' },
+            // Special
+            { type: 'special', text: '_exists_:', desc: 'Field exists check' },
+            { type: 'special', text: ':*', desc: 'Wildcard (any chars)' },
+            { type: 'special', text: ':?', desc: 'Single char wildcard' },
+            { type: 'special', text: ':/.+/', desc: 'Regex pattern' },
+            { type: 'special', text: '~', desc: 'Fuzzy search' },
+            { type: 'special', text: '^', desc: 'Boost factor' },
+        ];
+
         let queryCount = 0;
         let lastResult = null;
         let lastTranslation = null;
+        let selectedAutocompleteIndex = -1;
+
+        function setupAutocomplete() {
+            const input = document.getElementById('queryInput');
+            const dropdown = document.getElementById('autocompleteDropdown');
+
+            input.addEventListener('input', () => {
+                showAutocomplete(input.value, input.selectionStart);
+            });
+
+            input.addEventListener('keydown', (e) => {
+                const isDropdownVisible = dropdown.classList.contains('show');
+                const items = dropdown.querySelectorAll('.autocomplete-item');
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (isDropdownVisible && selectedAutocompleteIndex >= 0) {
+                        items[selectedAutocompleteIndex].click();
+                    } else {
+                        hideAutocomplete();
+                        translateQuery();
+                    }
+                    return;
+                }
+
+                if (!isDropdownVisible) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedAutocompleteIndex = Math.min(selectedAutocompleteIndex + 1, items.length - 1);
+                    updateAutocompleteSelection(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedAutocompleteIndex = Math.max(selectedAutocompleteIndex - 1, 0);
+                    updateAutocompleteSelection(items);
+                } else if (e.key === 'Escape') {
+                    hideAutocomplete();
+                } else if (e.key === 'Tab' && selectedAutocompleteIndex >= 0) {
+                    e.preventDefault();
+                    items[selectedAutocompleteIndex].click();
+                }
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(hideAutocomplete, 150);
+            });
+        }
+
+        function showAutocomplete(value, cursorPos) {
+            const dropdown = document.getElementById('autocompleteDropdown');
+
+            // Get the current word being typed
+            const beforeCursor = value.substring(0, cursorPos);
+            const words = beforeCursor.split(/\s+/);
+            const currentWord = words[words.length - 1].toLowerCase();
+
+            if (currentWord.length < 1) {
+                hideAutocomplete();
+                return;
+            }
+
+            // Filter suggestions
+            const matches = autocompleteSuggestions.filter(s =>
+                s.text.toLowerCase().includes(currentWord) ||
+                s.desc.toLowerCase().includes(currentWord)
+            );
+
+            if (matches.length === 0) {
+                hideAutocomplete();
+                return;
+            }
+
+            // Group by type
+            const grouped = {};
+            matches.forEach(m => {
+                if (!grouped[m.type]) grouped[m.type] = [];
+                grouped[m.type].push(m);
+            });
+
+            // Render dropdown
+            let html = '';
+            const typeLabels = { field: 'Fields', operator: 'Operators', range: 'Ranges', special: 'Special' };
+            Object.keys(grouped).forEach(type => {
+                html += `<div class="autocomplete-category">${typeLabels[type] || type}</div>`;
+                grouped[type].forEach(item => {
+                    html += `<div class="autocomplete-item" data-text="${escapeHtml(item.text)}">
+                        <span class="syntax">${escapeHtml(item.text)}</span>
+                        <span class="desc">${escapeHtml(item.desc)}</span>
+                    </div>`;
+                });
+            });
+
+            dropdown.innerHTML = html;
+            dropdown.classList.add('show');
+            selectedAutocompleteIndex = -1;
+
+            // Add click handlers
+            dropdown.querySelectorAll('.autocomplete-item').forEach((item, idx) => {
+                item.addEventListener('click', () => {
+                    insertAutocomplete(item.dataset.text);
+                });
+                item.addEventListener('mouseenter', () => {
+                    selectedAutocompleteIndex = idx;
+                    updateAutocompleteSelection(dropdown.querySelectorAll('.autocomplete-item'));
+                });
+            });
+        }
+
+        function hideAutocomplete() {
+            document.getElementById('autocompleteDropdown').classList.remove('show');
+            selectedAutocompleteIndex = -1;
+        }
+
+        function updateAutocompleteSelection(items) {
+            items.forEach((item, idx) => {
+                item.classList.toggle('selected', idx === selectedAutocompleteIndex);
+            });
+        }
+
+        function insertAutocomplete(text) {
+            const input = document.getElementById('queryInput');
+            const cursorPos = input.selectionStart;
+            const value = input.value;
+
+            // Find the start of the current word
+            const beforeCursor = value.substring(0, cursorPos);
+            const words = beforeCursor.split(/\s+/);
+            const currentWord = words[words.length - 1];
+            const wordStart = cursorPos - currentWord.length;
+
+            // Replace the current word with the suggestion
+            const newValue = value.substring(0, wordStart) + text + value.substring(cursorPos);
+            input.value = newValue;
+
+            // Move cursor to end of inserted text
+            const newCursorPos = wordStart + text.length;
+            input.setSelectionRange(newCursorPos, newCursorPos);
+            input.focus();
+
+            hideAutocomplete();
+        }
 
         function renderExampleQueries() {
             const container = document.getElementById('exampleQueries');
@@ -663,8 +1022,25 @@
             });
         }
 
-        function renderSyntaxReference() {
+        async function renderSyntaxReference() {
             const container = document.getElementById('syntaxReference');
+
+            // Try to load from server first (with timeout)
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const response = await fetch(`${DEMO_SERVER}/api/docs/syntax`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (response.ok) {
+                    const markdown = await response.text();
+                    container.innerHTML = renderMarkdown(markdown);
+                    return;
+                }
+            } catch (e) {
+                console.log('Could not load docs from server, using built-in reference');
+            }
+
+            // Fallback to built-in reference
             syntaxReference.forEach(cat => {
                 const div = document.createElement('div');
                 div.className = 'syntax-category';
@@ -683,9 +1059,44 @@
             });
         }
 
+        function renderMarkdown(md) {
+            // Simple markdown to HTML converter
+            let html = md
+                // Headers
+                .replace(/^### (.+)$/gm, '<h4 class="md-h4">$1</h4>')
+                .replace(/^## (.+)$/gm, '<h3 class="md-h3">$1</h3>')
+                .replace(/^# (.+)$/gm, '<h2 class="md-h2">$1</h2>')
+                // Code blocks
+                .replace(/```sql\n([\s\S]*?)```/g, '<pre class="md-code sql">$1</pre>')
+                .replace(/```json\n([\s\S]*?)```/g, '<pre class="md-code json">$1</pre>')
+                .replace(/```\n([\s\S]*?)```/g, '<pre class="md-code">$1</pre>')
+                // Inline code
+                .replace(/`([^`]+)`/g, '<code class="md-inline">$1</code>')
+                // Bold
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                // Italic
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+                // Lists
+                .replace(/^- (.+)$/gm, '<li>$1</li>')
+                .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
+                // Horizontal rule
+                .replace(/^---$/gm, '<hr class="md-hr">')
+                // Links
+                .replace(/\[([^\]]+)\]\(#([^)]+)\)/g, '<a href="#$2" class="md-link">$1</a>')
+                // Paragraphs
+                .replace(/\n\n/g, '</p><p>')
+                // Table of contents links
+                .replace(/^- \[(.+)\]\(#(.+)\)$/gm, '<li><a href="#$2">$1</a></li>');
+
+            return `<div class="md-content"><p>${html}</p></div>`;
+        }
+
         async function checkServerStatus() {
             try {
-                const response = await fetch(`${API_URL}/health`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const response = await fetch(`${API_URL}/health`, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 if (response.ok) {
                     document.getElementById('statusDot').classList.add('connected');
                     document.getElementById('statusText').textContent = 'Connected';
@@ -742,8 +1153,9 @@
         }
 
         async function executeQuery() {
-            if (!lastTranslation) {
-                showDbError('Translate a query first');
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                showDbError('Enter a query first');
                 return;
             }
 
@@ -751,13 +1163,13 @@
             document.getElementById('executeBtn').disabled = true;
 
             try {
-                const response = await fetch(`${API_URL}/api/v1/execute`, {
+                const response = await fetch(`${DEMO_SERVER}/api/execute`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         schema: SCHEMA,
                         database: DATABASE,
-                        query: document.getElementById('queryInput').value.trim()
+                        query: query
                     })
                 });
 
@@ -769,7 +1181,7 @@
                 }
 
                 const data = await response.json();
-                showDbResults(data.rows || [], data.count || 0, latency);
+                showDbResults(data.rows || [], data.count || 0, data.duration || latency, false, data.sql);
 
                 // Switch to results tab
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -778,9 +1190,9 @@
                 document.getElementById('resultsTab').classList.add('active');
 
             } catch (e) {
-                // If execute endpoint doesn't exist, show mock data
-                if (e.message.includes('404') || e.message.includes('fetch')) {
-                    showMockDbResults();
+                // If demo server not running, show error with instructions
+                if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+                    showDbError('Demo server not running. Start it with: cd examples && npm install && npm start');
                 } else {
                     showDbError(e.message);
                 }
@@ -799,7 +1211,7 @@
             showDbResults(mockRows, mockRows.length, 12, true);
         }
 
-        function showDbResults(rows, count, latency, isMock = false) {
+        function showDbResults(rows, count, latency, isMock = false, executedSql = null) {
             if (!rows || rows.length === 0) {
                 const html = `<div class="placeholder">No results found</div>`;
                 document.getElementById('dbResultsMain').innerHTML = html;
@@ -808,8 +1220,14 @@
             }
 
             const columns = Object.keys(rows[0]);
+            const sqlInfo = executedSql ? `<div class="result-block" style="margin-bottom: 12px;">
+                <div class="result-label">Executed SQL</div>
+                <div class="result-value sql" style="font-size: 0.7rem;">${escapeHtml(executedSql)}</div>
+            </div>` : '';
+
             const tableHtml = `
-                ${isMock ? '<div style="color: var(--muted-foreground); font-size: 0.7rem; margin-bottom: 8px;">(Demo data - execute endpoint not available)</div>' : ''}
+                ${isMock ? '<div style="color: var(--muted-foreground); font-size: 0.7rem; margin-bottom: 8px;">(Demo data - demo server not running)</div>' : ''}
+                ${sqlInfo}
                 <table class="db-table">
                     <thead>
                         <tr>${columns.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr>
@@ -930,13 +1348,11 @@ cursor.execute(<span class="code-string">f"SELECT * FROM products WHERE {result[
         document.getElementById('translateBtn').addEventListener('click', translateQuery);
         document.getElementById('executeBtn').addEventListener('click', executeQuery);
         document.getElementById('clearBtn').addEventListener('click', clearQuery);
-        document.getElementById('queryInput').addEventListener('keypress', e => {
-            if (e.key === 'Enter') translateQuery();
-        });
 
         renderExampleQueries();
         renderSyntaxReference();
         checkServerStatus();
+        setupAutocomplete();
         setInterval(checkServerStatus, 10000);
     </script>
 </body>

@@ -80,6 +80,32 @@ else
     echo "Warning: Failed to register schema (server may not be ready yet)"
 fi
 
+# Start Node.js demo server for database execution
+echo "Starting demo server..."
+cd "$PROJECT_ROOT/examples"
+
+# Install dependencies if needed
+if [ ! -d "node_modules" ]; then
+    echo "Installing demo server dependencies..."
+    npm install --silent
+fi
+
+# Start Node server
+node server.js > ../.demo-server.log 2>&1 &
+DEMO_PID=$!
+echo $DEMO_PID > ../.demo-server.pid
+cd "$PROJECT_ROOT"
+
+sleep 2
+
+# Check if demo server started
+if ! ps -p $DEMO_PID > /dev/null; then
+    echo "Warning: Demo server failed to start"
+    echo "Database execution will not be available"
+else
+    echo "Demo server started successfully"
+fi
+
 echo ""
 echo "=========================================="
 echo "Demo environment is ready!"
@@ -87,13 +113,14 @@ echo "=========================================="
 echo ""
 echo "Services:"
 echo "  - rsearch API:    http://localhost:8080"
+echo "  - Demo Server:    http://localhost:3000"
 echo "  - PostgreSQL:     localhost:5432 (user: rsearch, password: rsearch123)"
 echo "  - MySQL:          localhost:3306 (user: rsearch, password: rsearch123)"
 echo "  - MongoDB:        localhost:27017"
 echo "  - pgAdmin:        http://localhost:5050 (admin@rsearch.local / admin)"
 echo "  - Mongo Express:  http://localhost:8081"
 echo ""
-echo "Demo page: file://$PROJECT_ROOT/examples/demo.html"
+echo "Open in browser: http://localhost:3000/demo.html"
 echo ""
 echo "To stop the demo: ./examples/stop-demo.sh"
 echo "=========================================="

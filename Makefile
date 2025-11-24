@@ -34,8 +34,6 @@ demo: build
 	@echo "Starting demo environment..."
 	@-pkill -f "bin/rsearch" 2>/dev/null || true
 	@./examples/start-demo.sh
-	@sleep 2
-	@echo "Check file://///wsl.localhost/Ubuntu/home/raw/rsearch/examples/demo.html"
 	@echo ""
 	@echo "Demo is running! Press Ctrl+C and run 'make stop' when done."
 

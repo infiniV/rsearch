@@ -22,10 +22,23 @@ else
     echo "Stopped rsearch server"
 fi
 
+# Stop demo server
+if [ -f .demo-server.pid ]; then
+    DEMO_PID=$(cat .demo-server.pid)
+    if ps -p $DEMO_PID > /dev/null 2>&1; then
+        kill $DEMO_PID 2>/dev/null || true
+        echo "Stopped demo server (PID: $DEMO_PID)"
+    fi
+    rm -f .demo-server.pid
+else
+    # Fallback: kill by process name
+    pkill -f "examples/server.js" || true
+fi
+
 # Stop Docker services
 docker-compose -f docker-compose.dev.yaml down
 
 # Clean up temporary files
-rm -f .demo-config.yaml .rsearch.log
+rm -f .demo-config.yaml .rsearch.log .demo-server.log
 
 echo "Demo environment stopped"
