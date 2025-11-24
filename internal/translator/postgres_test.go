@@ -16,12 +16,9 @@ func TestPostgresTranslator_DatabaseType(t *testing.T) {
 func TestPostgresTranslator_SimpleFieldQuery(t *testing.T) {
 	translator := NewPostgresTranslator()
 
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText, Column: "product_code"},
+	}, schema.SchemaOptions{})
 
 	ast := &FieldQuery{
 		Field: "product_code",
@@ -35,18 +32,15 @@ func TestPostgresTranslator_SimpleFieldQuery(t *testing.T) {
 	assert.Equal(t, "product_code = $1", output.WhereClause)
 	assert.Len(t, output.Parameters, 1)
 	assert.Equal(t, "13w42", output.Parameters[0])
-	assert.Equal(t, []string{"text"}, output.ParameterTypes)
+	assert.Equal(t, []string{string(schema.TypeText)}, output.ParameterTypes)
 }
 
 func TestPostgresTranslator_NumberFieldQuery(t *testing.T) {
 	translator := NewPostgresTranslator()
 
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"rod_length": {Name: "rod_length", Type: "number", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"rod_length": {Type: schema.TypeInteger, Column: "rod_length"},
+	}, schema.SchemaOptions{})
 
 	ast := &FieldQuery{
 		Field: "rod_length",
@@ -58,19 +52,16 @@ func TestPostgresTranslator_NumberFieldQuery(t *testing.T) {
 	assert.NotNil(t, output)
 	assert.Equal(t, "rod_length = $1", output.WhereClause)
 	assert.Equal(t, "100", output.Parameters[0])
-	assert.Equal(t, []string{"number"}, output.ParameterTypes)
+	assert.Equal(t, []string{string(schema.TypeInteger)}, output.ParameterTypes)
 }
 
 func TestPostgresTranslator_BooleanAND(t *testing.T) {
 	translator := NewPostgresTranslator()
 
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
-			"region":       {Name: "region", Type: "text", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText, Column: "product_code"},
+		"region":       {Type: schema.TypeText, Column: "region"},
+	}, schema.SchemaOptions{})
 
 	ast := &BinaryOp{
 		Op: "AND",
@@ -91,18 +82,15 @@ func TestPostgresTranslator_BooleanAND(t *testing.T) {
 	assert.Len(t, output.Parameters, 2)
 	assert.Equal(t, "13w42", output.Parameters[0])
 	assert.Equal(t, "ca", output.Parameters[1])
-	assert.Equal(t, []string{"text", "text"}, output.ParameterTypes)
+	assert.Equal(t, []string{string(schema.TypeText), string(schema.TypeText)}, output.ParameterTypes)
 }
 
 func TestPostgresTranslator_BooleanOR(t *testing.T) {
 	translator := NewPostgresTranslator()
 
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"region": {Name: "region", Type: "text", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"region": {Type: schema.TypeText, Column: "region"},
+	}, schema.SchemaOptions{})
 
 	ast := &BinaryOp{
 		Op: "OR",
@@ -128,12 +116,9 @@ func TestPostgresTranslator_BooleanOR(t *testing.T) {
 func TestPostgresTranslator_RangeQuery(t *testing.T) {
 	translator := NewPostgresTranslator()
 
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"rod_length": {Name: "rod_length", Type: "number", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"rod_length": {Type: schema.TypeInteger, Column: "rod_length"},
+	}, schema.SchemaOptions{})
 
 	ast := &RangeQuery{
 		Field:          "rod_length",
@@ -150,18 +135,15 @@ func TestPostgresTranslator_RangeQuery(t *testing.T) {
 	assert.Len(t, output.Parameters, 2)
 	assert.Equal(t, 50, output.Parameters[0])
 	assert.Equal(t, 500, output.Parameters[1])
-	assert.Equal(t, []string{"number", "number"}, output.ParameterTypes)
+	assert.Equal(t, []string{string(schema.TypeInteger), string(schema.TypeInteger)}, output.ParameterTypes)
 }
 
 func TestPostgresTranslator_RangeQuery_Exclusive(t *testing.T) {
 	translator := NewPostgresTranslator()
 
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"price": {Name: "price", Type: "number", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"price": {Type: schema.TypeInteger, Column: "price"},
+	}, schema.SchemaOptions{})
 
 	ast := &RangeQuery{
 		Field:          "price",
@@ -183,12 +165,9 @@ func TestPostgresTranslator_RangeQuery_Exclusive(t *testing.T) {
 func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
 	translator := NewPostgresTranslator()
 
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText, Column: "product_code"},
+	}, schema.SchemaOptions{})
 
 	ast := &FieldQuery{
 		Field: "invalid_field",
@@ -201,38 +180,16 @@ func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
 	assert.Contains(t, err.Error(), "not found")
 }
 
-func TestPostgresTranslator_FieldNotSearchable(t *testing.T) {
-	translator := NewPostgresTranslator()
-
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"internal_id": {Name: "internal_id", Type: "text", Searchable: false},
-		},
-	}
-
-	ast := &FieldQuery{
-		Field: "internal_id",
-		Value: "test",
-	}
-
-	output, err := translator.Translate(ast, testSchema)
-	assert.Error(t, err)
-	assert.Nil(t, output)
-	assert.Contains(t, err.Error(), "not searchable")
-}
+// TestPostgresTranslator_FieldNotSearchable removed - Searchable field is no longer part of schema
 
 func TestPostgresTranslator_ComplexNestedQuery(t *testing.T) {
 	translator := NewPostgresTranslator()
 
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
-			"region":       {Name: "region", Type: "text", Searchable: true},
-			"status":       {Name: "status", Type: "text", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText, Column: "product_code"},
+		"region":       {Type: schema.TypeText, Column: "region"},
+		"status":       {Type: schema.TypeText, Column: "status"},
+	}, schema.SchemaOptions{})
 
 	// (productCode:13w42 AND region:ca) OR status:active
 	ast := &BinaryOp{
@@ -267,14 +224,11 @@ func TestPostgresTranslator_ComplexNestedQuery(t *testing.T) {
 func TestPostgresTranslator_ParameterNumbering(t *testing.T) {
 	translator := NewPostgresTranslator()
 
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"a": {Name: "a", Type: "text", Searchable: true},
-			"b": {Name: "b", Type: "text", Searchable: true},
-			"c": {Name: "c", Type: "text", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"a": {Type: schema.TypeText, Column: "a"},
+		"b": {Type: schema.TypeText, Column: "b"},
+		"c": {Type: schema.TypeText, Column: "c"},
+	}, schema.SchemaOptions{})
 
 	// a:1 AND b:2 AND c:3
 	ast := &BinaryOp{
