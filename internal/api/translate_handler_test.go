@@ -19,12 +19,9 @@ func TestTranslateHandler_ParserNotImplemented(t *testing.T) {
 	translatorRegistry := translator.NewRegistry()
 
 	// Register test schema
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
 	schemaRegistry.Register(testSchema)
 
 	// Register postgres translator
@@ -100,12 +97,9 @@ func TestTranslateHandler_DatabaseNotSupported(t *testing.T) {
 	translatorRegistry := translator.NewRegistry()
 
 	// Register test schema
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
 	schemaRegistry.Register(testSchema)
 
 	handler := NewTranslateHandler(schemaRegistry, translatorRegistry)
@@ -135,13 +129,10 @@ func TestTranslateHandler_WithStubAST(t *testing.T) {
 	translatorRegistry := translator.NewRegistry()
 
 	// Register test schema
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
-			"region":       {Name: "region", Type: "text", Searchable: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText},
+		"region":       {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
 	schemaRegistry.Register(testSchema)
 
 	// Register postgres translator

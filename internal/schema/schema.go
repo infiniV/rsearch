@@ -30,12 +30,20 @@ type Field struct {
 	Aliases []string  `json:"aliases,omitempty"`  // Alternative field names
 }
 
+// EnabledFeatures contains flags for optional database features
+type EnabledFeatures struct {
+	Fuzzy     bool `json:"fuzzy"`     // Enable fuzzy search (requires pg_trgm for PostgreSQL)
+	Proximity bool `json:"proximity"` // Enable proximity search (requires full-text search)
+	Regex     bool `json:"regex"`     // Enable regex search
+}
+
 // SchemaOptions contains configuration options for a schema
 type SchemaOptions struct {
-	NamingConvention string `json:"namingConvention"` // "snake_case", "camelCase", "PascalCase", "none"
-	StrictOperators  bool   `json:"strictOperators"`  // case-sensitive AND/OR/NOT
-	StrictFieldNames bool   `json:"strictFieldNames"` // case-sensitive field names
-	DefaultField     string `json:"defaultField"`     // field for queries without field specifier
+	NamingConvention string           `json:"namingConvention"` // "snake_case", "camelCase", "PascalCase", "none"
+	StrictOperators  bool             `json:"strictOperators"`  // case-sensitive AND/OR/NOT
+	StrictFieldNames bool             `json:"strictFieldNames"` // case-sensitive field names
+	DefaultField     string           `json:"defaultField"`     // field for queries without field specifier
+	EnabledFeatures  EnabledFeatures  `json:"enabledFeatures"`  // Optional database features
 }
 
 // Schema represents a schema definition

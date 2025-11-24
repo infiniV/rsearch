@@ -48,6 +48,8 @@ func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (st
 		return p.translateBinaryOp(n, schema)
 	case *RangeQuery:
 		return p.translateRangeQuery(n, schema)
+	case *FuzzyQuery:
+		return p.translateFuzzyQuery(n, schema)
 	default:
 		return "", fmt.Errorf("unsupported node type: %s", node.Type())
 	}
@@ -158,4 +160,34 @@ func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.
 	}
 
 	return strings.Join(clauses, " AND "), nil
+}
+
+// translateFuzzyQuery translates fuzzy search queries like field:term~ or field:term~1.
+func (p *PostgresTranslator) translateFuzzyQuery(fq *FuzzyQuery, schema *schema.Schema) (string, error) {
+	// Check if fuzzy search is enabled in schema options
+	if !schema.Options.EnabledFeatures.Fuzzy {
+		return "", fmt.Errorf("fuzzy search requires pg_trgm extension. Enable in schema or use wildcards instead: %s:*", fq.Field)
+	}
+
+	// Validate field exists in schema
+	columnName, field, err := schema.ResolveField(fq.Field)
+	if err != nil {
+		return "", fmt.Errorf("field %s not found in schema %s", fq.Field, schema.Name)
+	}
+
+	_ = field // Use field if needed later
+
+	// Use levenshtein distance for fuzzy matching
+	// Format: levenshtein(field, $1) <= $2
+	p.paramCount++
+	p.params = append(p.params, fq.Term)
+	p.paramTypes = append(p.paramTypes, string(field.Type))
+	termParam := p.paramCount
+
+	p.paramCount++
+	p.params = append(p.params, fq.Distance)
+	p.paramTypes = append(p.paramTypes, "integer")
+	distanceParam := p.paramCount
+
+	return fmt.Sprintf("levenshtein(%s, $%d) <= $%d", columnName, termParam, distanceParam), nil
 }

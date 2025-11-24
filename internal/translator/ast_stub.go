@@ -39,3 +39,14 @@ type RangeQuery struct {
 func (r *RangeQuery) Type() string {
 	return "range_query"
 }
+
+// FuzzyQuery represents a fuzzy search query like field:term~ or field:term~1.
+type FuzzyQuery struct {
+	Field    string
+	Term     string
+	Distance int // Edit distance (default 2 if not specified)
+}
+
+func (f *FuzzyQuery) Type() string {
+	return "fuzzy_query"
+}
