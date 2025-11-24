@@ -11,6 +11,7 @@ This reference documents all supported query syntax patterns in rsearch, with ex
 - [Complex Queries](#complex-queries)
 - [Exists Queries](#exists-queries)
 - [Field Queries](#field-queries)
+- [Grouping](#grouping)
 - [Range Queries](#range-queries)
 - [Regex](#regex)
 - [Wildcards](#wildcards)
@@ -96,6 +97,66 @@ region = $1 AND NOT status = $2
 [
   "ca",
   "discontinued"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text",
+  "text"
+]
+```
+
+---
+
+### Symbol && operator
+
+**Query:**
+```
+productCode:13w42 && region:ca
+```
+
+**PostgreSQL Translation:**
+```sql
+product_code = $1 AND region = $2
+```
+
+**Parameters:**
+```json
+[
+  "13w42",
+  "ca"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text",
+  "text"
+]
+```
+
+---
+
+### Symbol || operator
+
+**Query:**
+```
+region:ca || region:ny
+```
+
+**PostgreSQL Translation:**
+```sql
+region = $1 OR region = $2
+```
+
+**Parameters:**
+```json
+[
+  "ca",
+  "ny"
 ]
 ```
 
@@ -219,6 +280,38 @@ name LIKE $1 AND price >= $2 AND region = $3
 
 ---
 
+### Range wildcard and exists combined
+
+**Query:**
+```
+productCode:13w* AND price:[10 TO 500] AND _exists_:description
+```
+
+**PostgreSQL Translation:**
+```sql
+product_code LIKE $1 AND price BETWEEN $2 AND $3 AND description IS NOT NULL
+```
+
+**Parameters:**
+```json
+[
+  "13w%",
+  "10",
+  "500"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text",
+  "float",
+  "float"
+]
+```
+
+---
+
 ## Exists Queries
 
 ### Field exists
@@ -307,6 +400,76 @@ rod_length = $1
 
 ---
 
+## Grouping
+
+### Parenthesized OR with AND
+
+**Query:**
+```
+(region:ca OR region:ny) AND price:<150
+```
+
+**PostgreSQL Translation:**
+```sql
+(region = $1 OR region = $2) AND price < $3
+```
+
+**Parameters:**
+```json
+[
+  "ca",
+  "ny",
+  "150"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text",
+  "text",
+  "float"
+]
+```
+
+---
+
+### Nested groups
+
+**Query:**
+```
+(name:Widget AND price:[50 TO 200]) OR (region:ca AND rodLength:>=100)
+```
+
+**PostgreSQL Translation:**
+```sql
+((name = $1 AND rod_length BETWEEN $2 AND $3)) OR ((region = $4 AND rod_length >= $5))
+```
+
+**Parameters:**
+```json
+[
+  "Widget",
+  "50",
+  "200",
+  "ca",
+  "100"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text",
+  "integer",
+  "integer",
+  "text",
+  "integer"
+]
+```
+
+---
+
 ## Range Queries
 
 ### Inclusive range with brackets
@@ -356,6 +519,36 @@ price > $1 AND price < $2
 [
   "10",
   "20"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "float",
+  "float"
+]
+```
+
+---
+
+### Mixed range inclusive start exclusive end
+
+**Query:**
+```
+price:[50 TO 100}
+```
+
+**PostgreSQL Translation:**
+```sql
+price >= $1 AND price < $2
+```
+
+**Parameters:**
+```json
+[
+  "50",
+  "100"
 ]
 ```
 
@@ -420,6 +613,34 @@ rod_length < $1
 ```json
 [
   "integer"
+]
+```
+
+---
+
+### Unbounded range with wildcard end
+
+**Query:**
+```
+price:[100 TO *]
+```
+
+**PostgreSQL Translation:**
+```sql
+price >= $1
+```
+
+**Parameters:**
+```json
+[
+  "100"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "float"
 ]
 ```
 
@@ -529,6 +750,34 @@ product_code LIKE $1
 ```json
 [
   "13w4_"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text"
+]
+```
+
+---
+
+### Contains wildcard
+
+**Query:**
+```
+name:*idg*
+```
+
+**PostgreSQL Translation:**
+```sql
+name LIKE $1
+```
+
+**Parameters:**
+```json
+[
+  "%idg%"
 ]
 ```
 

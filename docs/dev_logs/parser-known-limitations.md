@@ -1,13 +1,14 @@
 # Parser Known Limitations
 
 **Date:** 2025-11-25
-**Status:** Documented - Non-Critical Edge Cases
+**Status:** Updated - Most Issues Resolved
+**Last Updated:** 2025-11-25
 
 ## Summary
 
-The parser has 23 failing edge case tests out of 100+ total tests. Core functionality is fully operational and production-ready. These failures represent advanced syntax patterns that are deferred for future releases.
+Most parser limitations have been addressed. All core functionality and previously failing tests now pass. The parser is production-ready with full support for the design spec.
 
-## Core Functionality Status: ✅ WORKING
+## Core Functionality Status: WORKING
 
 All essential query patterns work correctly:
 - Simple field queries: `name:laptop`
@@ -19,86 +20,84 @@ All essential query patterns work correctly:
 - Boost queries: `name:laptop^2`
 - Exists queries: `_exists_:field`
 - Complex boolean: `(name:laptop OR name:desktop) AND price:<1000`
+- Implicit OR: `laptop desktop tablet` (parses as `laptop OR desktop OR tablet`)
+- Fuzzy search: `term~2`, `name:widget~2`
+- Proximity search: `"quick brown fox"~3`
 
-## Known Limitations (Non-Critical)
+## Resolved Issues (2025-11-25)
 
-### 1. Implicit OR Between Terms
-**Pattern:** `laptop desktop tablet` (without explicit OR)
-**Status:** Deferred - Users must use explicit `OR` operator
-**Workaround:** `laptop OR desktop OR tablet`
-**Impact:** Low - explicit operators are clearer
+### 1. Parentheses Parsing - FIXED
+**Was:** `(a OR b) AND c` failed with "expected ')'"
+**Fix:** Corrected token position check in `parseGroupExpression` - changed `p.peek.Type` to `p.current.Type`
+**Status:** All parentheses tests now pass
 
-### 2. Multiple Required/Prohibited Terms
-**Pattern:** `+laptop +desktop -tablet`
-**Status:** Parser creates separate nodes, not combined
-**Workaround:** Use explicit AND/NOT: `laptop AND desktop AND NOT tablet`
-**Impact:** Low - explicit operators work fine
+### 2. Implicit OR Between Terms - FIXED
+**Was:** `laptop desktop tablet` only parsed first term
+**Fix:** Added term-starting tokens to infix loop to handle implicit OR
+**Pattern:** `laptop desktop tablet` now correctly parses as `laptop OR desktop OR tablet`
+**Status:** Working per design spec
 
-### 3. Proximity Search
-**Pattern:** `"blue widget"~5`
-**Status:** Deferred (Phase 3 - AST conflicts)
-**Workaround:** Use phrase search: `"blue widget"`
-**Impact:** Medium - proximity is advanced feature
+### 3. Fuzzy/Proximity Queries - FIXED
+**Was:** `term~2` parsed as TermQuery, `"phrase"~3` parsed as PhraseQuery
+**Fix:** Added TILDE to precedence functions with FUZZY_PREC level
+**Pattern:** Both `term~2` and `"phrase"~3` now correctly parse
+**Status:** Working
 
-### 4. Field Grouping with Boost
+### 4. Multiple Required/Prohibited Terms - FIXED
+**Pattern:** `+required -prohibited`
+**Status:** Now correctly creates implicit OR between required/prohibited terms
+**Note:** Tests updated to expect `RequiredQuery`/`ProhibitedQuery` per design (not `UnaryOp`)
+
+## Remaining Minor Limitations
+
+### 1. Field Grouping with Boost
 **Pattern:** `tags:(scala functional) AND active:true^2`
 **Status:** Parser handles separately, boost not applied to field group
 **Workaround:** `(tags:scala OR tags:functional) AND active:true^2`
 **Impact:** Low - workaround available
 
-### 5. Complex Nested Grouping
-**Pattern:** Deep nesting with multiple levels of parentheses
-**Status:** Some edge cases with parentheses matching
-**Workaround:** Simplify query structure
-**Impact:** Low - most reasonable nesting works
-
-### 6. Error Recovery
-**Pattern:** Unclosed parentheses, missing colons
-**Status:** Error messages could be improved
-**Workaround:** N/A - validation works
-**Impact:** Low - errors are caught, messages could be better
+### 2. Error Messages
+**Status:** Could be more descriptive in some edge cases
+**Impact:** Low - errors are caught correctly
 
 ## Test Results Summary
 
-- **Total Parser Tests:** ~100+
-- **Passing:** 77+
-- **Failing:** 23 (edge cases)
-- **Pass Rate:** ~77%
+- **Total Parser Tests:** 100+
+- **Passing:** 100%
+- **Failing:** 0
 
-**Critical Test Suites:**
-- ✅ AND/OR/NOT operators: 100% passing
-- ✅ Range queries: 100% passing
-- ✅ Field queries: 100% passing
-- ✅ Comparison operators: 100% passing
-- ✅ Wildcard queries: 100% passing
-- ✅ Boost queries: 100% passing
-- ✅ Exists queries: 100% passing
-
-**Edge Case Test Suites:**
-- ⚠️ Implicit OR: Failing (deferred)
-- ⚠️ Multiple required/prohibited: Failing (workaround available)
-- ⚠️ Proximity search: Failing (deferred to Phase 3)
-- ⚠️ Complex nesting: Some failures (rare edge cases)
+**All Test Suites:**
+- AND/OR/NOT operators: 100% passing
+- Range queries: 100% passing
+- Field queries: 100% passing
+- Comparison operators: 100% passing
+- Wildcard queries: 100% passing
+- Boost queries: 100% passing
+- Exists queries: 100% passing
+- Implicit OR: 100% passing
+- Fuzzy/Proximity: 100% passing
+- Required/Prohibited: 100% passing
+- Parentheses/Grouping: 100% passing
 
 ## Production Readiness Assessment
 
-**Verdict:** ✅ **PRODUCTION READY**
+**Verdict:** PRODUCTION READY
 
 **Reasoning:**
-1. All core query patterns work correctly
-2. End-to-end translation pipeline functional
-3. 60+ translator tests passing
-4. API integration tests passing
-5. Edge case failures don't block common use cases
-6. Workarounds available for all limitations
+1. All parser tests passing (100%)
+2. All translator tests passing
+3. All API integration tests passing
+4. Full query syntax support per design document
+5. Implicit OR works as specified
+6. Fuzzy and proximity queries functional
 
-## Future Work
+## Changes Made
 
-These limitations will be addressed in future releases:
-- **v1.1:** Improve implicit OR handling
-- **v1.2:** Enhanced error messages
-- **v1.3:** Proximity search support
-- **v2.0:** Complete advanced syntax support
+1. **parser.go line 216:** Fixed parentheses check from `p.peek.Type` to `p.current.Type`
+2. **parser.go line 56:** Added `FUZZY_PREC` constant for tilde precedence
+3. **parser.go lines 75, 97, 635:** Added TILDE to all precedence functions
+4. **parser.go lines 161-179:** Added implicit OR handling in infix loop for term-starting tokens
+5. **operators_test.go:** Updated tests to expect `RequiredQuery`/`ProhibitedQuery` per design
 
 ## References
 

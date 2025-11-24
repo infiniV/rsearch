@@ -53,6 +53,7 @@ const (
 	REQUIRED_PREC   // +term, -term
 	FIELD_PREC      // field:value
 	BOOST_PREC      // ^
+	FUZZY_PREC      // ~
 	PREFIX          // highest
 )
 
@@ -71,6 +72,8 @@ func (p *Parser) currentPrecedence() int {
 		return FIELD_PREC
 	case CARET:
 		return BOOST_PREC
+	case TILDE:
+		return FUZZY_PREC
 	default:
 		return LOWEST
 	}
@@ -91,6 +94,8 @@ func (p *Parser) peekPrecedence() int {
 		return FIELD_PREC
 	case CARET:
 		return BOOST_PREC
+	case TILDE:
+		return FUZZY_PREC
 	default:
 		return LOWEST
 	}
@@ -153,25 +158,27 @@ func (p *Parser) parseExpression(precedence int) Node {
 				return left
 			}
 			left = p.parseFuzzyOrProximityExpression(left)
+		case STRING, WILDCARD, NUMBER, QUOTED_STRING, LPAREN, PLUS, MINUS, NOT, EXISTS, LBRACKET, LBRACE:
+			// Handle implicit OR with adjacent terms
+			if precedence >= OR_PREC {
+				return left
+			}
+			if left == nil {
+				return nil
+			}
+			right := p.parseExpression(OR_PREC)
+			if right != nil {
+				left = &BinaryOp{
+					Op:    "OR",
+					Left:  left,
+					Right: right,
+					Pos:   left.Position(),
+				}
+			} else {
+				return left
+			}
 		default:
 			return left
-		}
-	}
-
-	// Handle implicit OR with adjacent terms
-	if precedence == LOWEST && p.current.Type != EOF && p.current.Type != RPAREN &&
-		p.current.Type != AND && p.current.Type != OR &&
-		(p.current.Type == STRING || p.current.Type == WILDCARD || p.current.Type == NUMBER ||
-			p.current.Type == QUOTED_STRING || p.current.Type == LPAREN || p.current.Type == PLUS ||
-			p.current.Type == MINUS || p.current.Type == NOT || p.current.Type == EXISTS) {
-		right := p.parseExpression(OR_PREC)
-		if right != nil {
-			return &BinaryOp{
-				Op:    "OR",
-				Left:  left,
-				Right: right,
-				Pos:   left.Position(),
-			}
 		}
 	}
 
@@ -213,12 +220,11 @@ func (p *Parser) parseGroupExpression() Node {
 
 	expr := p.parseExpression(LOWEST)
 
-	if p.peek.Type != RPAREN {
-		p.addError("expected ')'", p.peek.Position)
+	if p.current.Type != RPAREN {
+		p.addError("expected ')'", p.current.Position)
 		return expr
 	}
 
-	p.nextToken() // move to ')'
 	p.nextToken() // consume ')'
 
 	return &GroupQuery{Query: expr, Pos: pos}
@@ -628,6 +634,8 @@ func precedenceOfType(tt TokenType) int {
 		return FIELD_PREC
 	case CARET:
 		return BOOST_PREC
+	case TILDE:
+		return FUZZY_PREC
 	case STRING, WILDCARD, NUMBER, QUOTED_STRING:
 		return LOWEST
 	default:

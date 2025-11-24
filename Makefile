@@ -1,4 +1,4 @@
-.PHONY: demo build start stop clean test help
+.PHONY: demo build start stop clean test help generate-docs
 
 # Go configuration (standard install location)
 export PATH := /usr/local/go/bin:$(PATH)
@@ -13,12 +13,13 @@ help:
 	@echo "rsearch Makefile"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make demo   - Start demo environment and open browser"
-	@echo "  make build  - Build rsearch binary"
-	@echo "  make start  - Start services (Docker + rsearch)"
-	@echo "  make stop   - Stop all services"
-	@echo "  make clean  - Stop services and remove binary"
-	@echo "  make test   - Run tests"
+	@echo "  make demo          - Start demo environment and open browser"
+	@echo "  make build         - Build rsearch binary"
+	@echo "  make start         - Start services (Docker + rsearch)"
+	@echo "  make stop          - Stop all services"
+	@echo "  make clean         - Stop services and remove binary"
+	@echo "  make test          - Run tests"
+	@echo "  make generate-docs - Generate syntax documentation from test cases"
 	@echo ""
 
 # Build the rsearch binary
@@ -31,24 +32,16 @@ build:
 # Start demo environment and open browser
 demo: build
 	@echo "Starting demo environment..."
+	@-pkill -f "bin/rsearch" 2>/dev/null || true
 	@./examples/start-demo.sh
 	@sleep 2
-	@echo "Opening demo page in browser..."
-	@if command -v xdg-open > /dev/null 2>&1; then \
-		xdg-open "file://$(CURDIR)/$(DEMO_HTML)" 2>/dev/null & \
-	elif command -v open > /dev/null 2>&1; then \
-		open "file://$(CURDIR)/$(DEMO_HTML)" & \
-	elif command -v wslview > /dev/null 2>&1; then \
-		wslview "file://$(CURDIR)/$(DEMO_HTML)" & \
-	else \
-		echo "Could not detect browser. Please open manually:"; \
-		echo "file://$(CURDIR)/$(DEMO_HTML)"; \
-	fi
+	@echo "Check file://///wsl.localhost/Ubuntu/home/raw/rsearch/examples/demo.html"
 	@echo ""
 	@echo "Demo is running! Press Ctrl+C and run 'make stop' when done."
 
 # Start services without opening browser
 start: build
+	@-pkill -f "bin/rsearch" 2>/dev/null || true
 	@./examples/start-demo.sh
 
 # Stop all services
@@ -65,3 +58,8 @@ clean: stop
 test:
 	@echo "Running tests..."
 	@go test ./...
+
+# Generate syntax documentation from test cases
+generate-docs:
+	@echo "Generating documentation..."
+	@go run cmd/gendocs/main.go

@@ -55,6 +55,28 @@
     }
   },
   {
+    "category": "Boolean Operators",
+    "description": "Symbol && operator",
+    "query": "productCode:13w42 && region:ca",
+    "schema": "products",
+    "expected": {
+      "sql": "product_code = $1 AND region = $2",
+      "parameters": ["13w42", "ca"],
+      "parameterTypes": ["text", "text"]
+    }
+  },
+  {
+    "category": "Boolean Operators",
+    "description": "Symbol || operator",
+    "query": "region:ca || region:ny",
+    "schema": "products",
+    "expected": {
+      "sql": "region = $1 OR region = $2",
+      "parameters": ["ca", "ny"],
+      "parameterTypes": ["text", "text"]
+    }
+  },
+  {
     "category": "Range Queries",
     "description": "Inclusive range with brackets",
     "query": "rodLength:[50 TO 500]",
@@ -78,6 +100,17 @@
   },
   {
     "category": "Range Queries",
+    "description": "Mixed range inclusive start exclusive end",
+    "query": "price:[50 TO 100}",
+    "schema": "products",
+    "expected": {
+      "sql": "price >= $1 AND price < $2",
+      "parameters": ["50", "100"],
+      "parameterTypes": ["float", "float"]
+    }
+  },
+  {
+    "category": "Range Queries",
     "description": "Greater than or equal comparison",
     "query": "price:>=100",
     "schema": "products",
@@ -96,6 +129,17 @@
       "sql": "rod_length < $1",
       "parameters": ["200"],
       "parameterTypes": ["integer"]
+    }
+  },
+  {
+    "category": "Range Queries",
+    "description": "Unbounded range with wildcard end",
+    "query": "price:[100 TO *]",
+    "schema": "products",
+    "expected": {
+      "sql": "price >= $1",
+      "parameters": ["100"],
+      "parameterTypes": ["float"]
     }
   },
   {
@@ -128,6 +172,17 @@
     "expected": {
       "sql": "product_code LIKE $1",
       "parameters": ["13w4_"],
+      "parameterTypes": ["text"]
+    }
+  },
+  {
+    "category": "Wildcards",
+    "description": "Contains wildcard",
+    "query": "name:*idg*",
+    "schema": "products",
+    "expected": {
+      "sql": "name LIKE $1",
+      "parameters": ["%idg%"],
       "parameterTypes": ["text"]
     }
   },
@@ -179,6 +234,28 @@
     }
   },
   {
+    "category": "Grouping",
+    "description": "Parenthesized OR with AND",
+    "query": "(region:ca OR region:ny) AND price:<150",
+    "schema": "products",
+    "expected": {
+      "sql": "(region = $1 OR region = $2) AND price < $3",
+      "parameters": ["ca", "ny", "150"],
+      "parameterTypes": ["text", "text", "float"]
+    }
+  },
+  {
+    "category": "Grouping",
+    "description": "Nested groups",
+    "query": "(name:Widget AND price:[50 TO 200]) OR (region:ca AND rodLength:>=100)",
+    "schema": "products",
+    "expected": {
+      "sql": "((name = $1 AND rod_length BETWEEN $2 AND $3)) OR ((region = $4 AND rod_length >= $5))",
+      "parameters": ["Widget", "50", "200", "ca", "100"],
+      "parameterTypes": ["text", "integer", "integer", "text", "integer"]
+    }
+  },
+  {
     "category": "Complex Queries",
     "description": "Nested boolean with ranges",
     "query": "(productCode:13w42 AND region:ca) OR rodLength:[50 TO 500]",
@@ -198,6 +275,17 @@
       "sql": "name LIKE $1 AND price >= $2 AND region = $3",
       "parameters": ["widget%", "50", "ca"],
       "parameterTypes": ["text", "float", "text"]
+    }
+  },
+  {
+    "category": "Complex Queries",
+    "description": "Range wildcard and exists combined",
+    "query": "productCode:13w* AND price:[10 TO 500] AND _exists_:description",
+    "schema": "products",
+    "expected": {
+      "sql": "product_code LIKE $1 AND price BETWEEN $2 AND $3 AND description IS NOT NULL",
+      "parameters": ["13w%", "10", "500"],
+      "parameterTypes": ["text", "float", "float"]
     }
   }
 ]

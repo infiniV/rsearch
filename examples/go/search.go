@@ -109,7 +109,7 @@ func main() {
 		log.Fatal("Failed to ping database:", err)
 	}
 
-	fmt.Println("Connected to PostgreSQL\n")
+	fmt.Println("Connected to PostgreSQL")
 
 	// Example queries
 	examples := []struct {

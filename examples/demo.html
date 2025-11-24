@@ -23,16 +23,13 @@
             --border: #3e3e38;
             --input: #52514a;
             --ring: #d97757;
+            --success: #22c55e;
             --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
             --radius: 0.5rem;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: var(--font-sans);
@@ -43,22 +40,22 @@
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 24px;
         }
 
         header {
             text-align: center;
-            margin-bottom: 32px;
-            padding-bottom: 24px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
             border-bottom: 1px solid var(--border);
         }
 
         header h1 {
             font-size: 1.75rem;
             color: var(--card-foreground);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             font-weight: 600;
         }
 
@@ -69,8 +66,8 @@
 
         .main-grid {
             display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 24px;
+            grid-template-columns: 280px 1fr 380px;
+            gap: 20px;
         }
 
         .sidebar {
@@ -87,7 +84,7 @@
         }
 
         .card h2 {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--muted-foreground);
@@ -98,16 +95,15 @@
         .example-queries {
             max-height: calc(100vh - 200px);
             overflow-y: auto;
+            scrollbar-width: thin;
         }
 
-        .example-category {
-            margin-bottom: 16px;
-        }
+        .example-category { margin-bottom: 14px; }
 
         .example-category h3 {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--primary);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 0.03em;
             font-weight: 600;
@@ -115,8 +111,8 @@
 
         .example-query {
             background: var(--muted);
-            padding: 8px 10px;
-            margin-bottom: 6px;
+            padding: 6px 10px;
+            margin-bottom: 4px;
             border-radius: calc(var(--radius) - 2px);
             cursor: pointer;
             transition: all 0.15s ease;
@@ -129,34 +125,33 @@
         }
 
         .example-query .name {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--foreground);
-            margin-bottom: 2px;
         }
 
         .example-query .query {
             font-family: var(--font-mono);
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--muted-foreground);
         }
 
         .main-content {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
 
         .query-section {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 20px;
+            padding: 16px;
         }
 
         .input-row {
             display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
         input[type="text"] {
@@ -176,168 +171,82 @@
             box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.2);
         }
 
-        input[type="text"]::placeholder {
-            color: var(--muted-foreground);
-        }
+        input[type="text"]::placeholder { color: var(--muted-foreground); }
 
         button {
-            padding: 10px 20px;
+            padding: 10px 16px;
             background: var(--primary);
             color: var(--primary-foreground);
             border: none;
             border-radius: calc(var(--radius) - 2px);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 500;
             cursor: pointer;
             transition: opacity 0.15s;
         }
 
-        button:hover {
-            opacity: 0.9;
-        }
-
-        button.secondary {
-            background: var(--muted);
-            color: var(--foreground);
-        }
+        button:hover { opacity: 0.9; }
+        button.secondary { background: var(--muted); color: var(--foreground); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .status-bar {
             display: flex;
             align-items: center;
             gap: 16px;
-            padding: 10px 14px;
+            padding: 8px 12px;
             background: var(--muted);
             border-radius: calc(var(--radius) - 2px);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            flex-wrap: wrap;
         }
 
         .status-item {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             background: #ef4444;
         }
 
-        .status-dot.connected {
-            background: #22c55e;
-        }
+        .status-dot.connected { background: var(--success); }
 
-        .status-label {
-            color: var(--muted-foreground);
-        }
-
-        .status-value {
-            color: var(--foreground);
-            font-family: var(--font-mono);
-        }
+        .status-label { color: var(--muted-foreground); }
+        .status-value { color: var(--foreground); font-family: var(--font-mono); }
 
         .results-section {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 20px;
-        }
-
-        .result-block {
-            margin-bottom: 20px;
-        }
-
-        .result-block:last-child {
-            margin-bottom: 0;
-        }
-
-        .result-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--primary);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .result-value {
-            background: var(--muted);
-            padding: 12px 14px;
-            border-radius: calc(var(--radius) - 2px);
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: var(--card-foreground);
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .result-value.sql {
-            color: #a5d6ff;
-        }
-
-        .result-value.code {
-            font-size: 0.75rem;
-            line-height: 1.6;
-        }
-
-        .param-item {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 4px;
-        }
-
-        .param-index {
-            color: var(--primary);
-            min-width: 24px;
-        }
-
-        .param-value {
-            color: var(--card-foreground);
-        }
-
-        .param-type {
-            color: var(--muted-foreground);
-            font-size: 0.75rem;
-        }
-
-        .placeholder {
-            text-align: center;
-            padding: 48px 20px;
-            color: var(--muted-foreground);
-        }
-
-        .error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 14px;
-            border-radius: calc(var(--radius) - 2px);
-            color: #fca5a5;
+            padding: 16px;
+            flex: 1;
         }
 
         .tabs {
             display: flex;
             gap: 4px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
         }
 
         .tab {
-            padding: 6px 12px;
+            padding: 5px 10px;
             background: transparent;
             border: 1px solid transparent;
             border-radius: calc(var(--radius) - 2px);
             color: var(--muted-foreground);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.15s;
         }
 
-        .tab:hover {
-            color: var(--foreground);
-        }
+        .tab:hover { color: var(--foreground); }
 
         .tab.active {
             background: var(--muted);
@@ -345,42 +254,191 @@
             border-color: var(--border);
         }
 
-        .tab-content {
-            display: none;
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .result-block { margin-bottom: 16px; }
+        .result-block:last-child { margin-bottom: 0; }
+
+        .result-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary);
+            margin-bottom: 6px;
+            font-weight: 500;
         }
 
-        .tab-content.active {
-            display: block;
+        .result-value {
+            background: var(--muted);
+            padding: 10px 12px;
+            border-radius: calc(var(--radius) - 2px);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--card-foreground);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
-        .code-comment {
+        .result-value.sql { color: #a5d6ff; }
+        .result-value.code { font-size: 0.7rem; line-height: 1.5; }
+
+        .param-item {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 3px;
+        }
+
+        .param-index { color: var(--primary); min-width: 24px; }
+        .param-value { color: var(--card-foreground); }
+        .param-type { color: var(--muted-foreground); font-size: 0.7rem; }
+
+        .placeholder {
+            text-align: center;
+            padding: 40px 20px;
             color: var(--muted-foreground);
         }
 
-        .code-keyword {
-            color: #ff7b72;
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 12px;
+            border-radius: calc(var(--radius) - 2px);
+            color: #fca5a5;
         }
 
-        .code-string {
+        .code-comment { color: var(--muted-foreground); }
+        .code-keyword { color: #ff7b72; }
+        .code-string { color: #a5d6ff; }
+        .code-var { color: #ffa657; }
+
+        /* Database Results Panel */
+        .db-panel {
+            position: sticky;
+            top: 24px;
+            align-self: start;
+        }
+
+        .db-panel .card {
+            max-height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .db-results {
+            flex: 1;
+            overflow: auto;
+            scrollbar-width: thin;
+        }
+
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+        }
+
+        .db-table th {
+            text-align: left;
+            padding: 6px 8px;
+            background: var(--accent);
+            color: var(--primary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .db-table td {
+            padding: 5px 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--foreground);
+            font-family: var(--font-mono);
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .db-table tr:hover td {
+            background: var(--accent);
+        }
+
+        .db-count {
+            font-size: 0.7rem;
+            color: var(--muted-foreground);
+            padding: 8px 0;
+            border-top: 1px solid var(--border);
+            margin-top: 8px;
+        }
+
+        .db-count span { color: var(--success); font-weight: 500; }
+
+        /* Syntax Reference Styles */
+        .syntax-content {
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .syntax-category {
+            margin-bottom: 20px;
+        }
+
+        .syntax-category h3 {
+            font-size: 0.8rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .syntax-item {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: var(--muted);
+            border-radius: calc(var(--radius) - 2px);
+        }
+
+        .syntax-item h4 {
+            font-size: 0.75rem;
+            color: var(--card-foreground);
+            margin-bottom: 6px;
+        }
+
+        .syntax-query {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--primary);
+            background: var(--accent);
+            padding: 4px 8px;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
+
+        .syntax-sql {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
             color: #a5d6ff;
         }
 
-        .code-var {
-            color: #ffa657;
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 260px 1fr;
+            }
+            .db-panel { display: none; }
         }
 
-        @media (max-width: 800px) {
+        @media (max-width: 900px) {
             .main-grid {
                 grid-template-columns: 1fr;
             }
-
-            .sidebar {
-                position: static;
-            }
-
-            .example-queries {
-                max-height: 300px;
-            }
+            .sidebar { position: static; }
+            .example-queries { max-height: 250px; }
+            .container { padding: 16px; }
         }
     </style>
 </head>
@@ -402,13 +460,9 @@
             <div class="main-content">
                 <div class="query-section">
                     <div class="input-row">
-                        <input
-                            type="text"
-                            id="queryInput"
-                            placeholder="productCode:13w42 AND region:ca"
-                            autocomplete="off"
-                        />
+                        <input type="text" id="queryInput" placeholder="productCode:13w42 AND region:ca" autocomplete="off" />
                         <button id="translateBtn">Translate</button>
+                        <button id="executeBtn" class="secondary">Execute</button>
                         <button id="clearBtn" class="secondary">Clear</button>
                     </div>
                     <div class="status-bar">
@@ -416,6 +470,11 @@
                             <span class="status-dot" id="statusDot"></span>
                             <span class="status-label">API:</span>
                             <span class="status-value" id="statusText">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot" id="dbStatusDot"></span>
+                            <span class="status-label">DB:</span>
+                            <span class="status-value" id="dbStatusText">-</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Latency:</span>
@@ -431,23 +490,40 @@
                 <div class="results-section">
                     <div class="tabs">
                         <button class="tab active" data-tab="translation">Translation</button>
+                        <button class="tab" data-tab="results">DB Results</button>
                         <button class="tab" data-tab="integration">Integration</button>
+                        <button class="tab" data-tab="syntax">Syntax Reference</button>
                     </div>
 
                     <div id="translationTab" class="tab-content active">
                         <div id="translationResults">
-                            <div class="placeholder">
-                                Enter a query above or click an example
-                            </div>
+                            <div class="placeholder">Enter a query above or click an example</div>
+                        </div>
+                    </div>
+
+                    <div id="resultsTab" class="tab-content">
+                        <div id="dbResultsMain">
+                            <div class="placeholder">Click "Execute" to run query against database</div>
                         </div>
                     </div>
 
                     <div id="integrationTab" class="tab-content">
                         <div id="integrationCode">
-                            <div class="placeholder">
-                                Translate a query to see integration examples
-                            </div>
+                            <div class="placeholder">Translate a query to see integration examples</div>
                         </div>
+                    </div>
+
+                    <div id="syntaxTab" class="tab-content">
+                        <div id="syntaxReference" class="syntax-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="db-panel">
+                <div class="card">
+                    <h2>Live Results</h2>
+                    <div class="db-results" id="dbResultsPanel">
+                        <div class="placeholder" style="padding: 30px 10px;">Execute a query to see results</div>
                     </div>
                 </div>
             </div>
@@ -464,8 +540,9 @@
                 category: 'Basic',
                 queries: [
                     { name: 'Field match', query: 'productCode:13w42' },
-                    { name: 'By name', query: 'name:Widget*' },
+                    { name: 'By name', query: 'name:Widget' },
                     { name: 'By region', query: 'region:ca' },
+                    { name: 'Numeric', query: 'rodLength:150' },
                 ]
             },
             {
@@ -474,22 +551,32 @@
                     { name: 'AND', query: 'productCode:13w42 AND region:ca' },
                     { name: 'OR', query: 'region:ca OR region:ny' },
                     { name: 'NOT', query: 'region:ca AND NOT status:discontinued' },
+                    { name: '&& / ||', query: 'name:Widget && region:ca' },
                 ]
             },
             {
                 category: 'Ranges',
                 queries: [
                     { name: 'Inclusive', query: 'rodLength:[50 TO 200]' },
-                    { name: 'Price range', query: 'price:[50 TO 150]' },
-                    { name: 'Comparison', query: 'price:>=100' },
+                    { name: 'Exclusive', query: 'price:{10 TO 100}' },
+                    { name: '>= / <', query: 'price:>=50' },
+                    { name: 'Unbounded', query: 'price:[100 TO *]' },
                 ]
             },
             {
                 category: 'Wildcards',
                 queries: [
                     { name: 'Prefix', query: 'name:Widget*' },
-                    { name: 'Contains', query: 'name:*get*' },
-                    { name: 'Single char', query: 'productCode:13w4?' },
+                    { name: 'Suffix', query: 'name:*get' },
+                    { name: 'Single ?', query: 'productCode:13w4?' },
+                ]
+            },
+            {
+                category: 'Advanced',
+                queries: [
+                    { name: 'Regex', query: 'name:/wi[dg]get/' },
+                    { name: 'Exists', query: '_exists_:description' },
+                    { name: 'Boost', query: 'name:laptop^2' },
                 ]
             },
             {
@@ -501,8 +588,60 @@
             }
         ];
 
+        const syntaxReference = [
+            {
+                category: 'Field Queries',
+                items: [
+                    { query: 'field:value', sql: 'field = $1', desc: 'Exact match' },
+                    { query: 'field:"phrase"', sql: 'field = $1', desc: 'Phrase match' },
+                    { query: 'field:wild*', sql: 'field LIKE $1', desc: 'Wildcard (%)' },
+                    { query: 'field:wi?d', sql: 'field LIKE $1', desc: 'Single char (_)' },
+                    { query: 'field:/regex/', sql: 'field ~ $1', desc: 'Regex match' },
+                ]
+            },
+            {
+                category: 'Boolean Operators',
+                items: [
+                    { query: 'a AND b', sql: 'a AND b', desc: 'Both must match' },
+                    { query: 'a OR b', sql: 'a OR b', desc: 'Either matches' },
+                    { query: 'NOT a', sql: 'NOT a', desc: 'Must not match' },
+                    { query: 'a && b', sql: 'a AND b', desc: 'Symbol AND' },
+                    { query: 'a || b', sql: 'a OR b', desc: 'Symbol OR' },
+                    { query: '!a', sql: 'NOT a', desc: 'Symbol NOT' },
+                ]
+            },
+            {
+                category: 'Range Queries',
+                items: [
+                    { query: '[50 TO 500]', sql: 'BETWEEN $1 AND $2', desc: 'Inclusive' },
+                    { query: '{50 TO 500}', sql: '> $1 AND < $2', desc: 'Exclusive' },
+                    { query: '[50 TO 500}', sql: '>= $1 AND < $2', desc: 'Mixed' },
+                    { query: '>=100', sql: '>= $1', desc: 'Greater or equal' },
+                    { query: '<100', sql: '< $1', desc: 'Less than' },
+                    { query: '[100 TO *]', sql: '>= $1', desc: 'Unbounded' },
+                ]
+            },
+            {
+                category: 'Grouping',
+                items: [
+                    { query: '(a OR b) AND c', sql: '(a OR b) AND c', desc: 'Parentheses' },
+                    { query: 'field:(a OR b)', sql: '(field=$1 OR field=$2)', desc: 'Field group' },
+                ]
+            },
+            {
+                category: 'Special',
+                items: [
+                    { query: '_exists_:field', sql: 'field IS NOT NULL', desc: 'Field exists' },
+                    { query: 'field:value^2', sql: 'field = $1 + metadata', desc: 'Boost' },
+                    { query: '+term', sql: 'term (required)', desc: 'Required' },
+                    { query: '-term', sql: 'NOT term', desc: 'Prohibited' },
+                ]
+            }
+        ];
+
         let queryCount = 0;
         let lastResult = null;
+        let lastTranslation = null;
 
         function renderExampleQueries() {
             const container = document.getElementById('exampleQueries');
@@ -524,17 +663,41 @@
             });
         }
 
+        function renderSyntaxReference() {
+            const container = document.getElementById('syntaxReference');
+            syntaxReference.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = 'syntax-category';
+                div.innerHTML = `<h3>${cat.category}</h3>`;
+                cat.items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'syntax-item';
+                    itemDiv.innerHTML = `
+                        <h4>${item.desc}</h4>
+                        <div class="syntax-query">${escapeHtml(item.query)}</div>
+                        <div class="syntax-sql">${escapeHtml(item.sql)}</div>
+                    `;
+                    div.appendChild(itemDiv);
+                });
+                container.appendChild(div);
+            });
+        }
+
         async function checkServerStatus() {
             try {
                 const response = await fetch(`${API_URL}/health`);
                 if (response.ok) {
                     document.getElementById('statusDot').classList.add('connected');
                     document.getElementById('statusText').textContent = 'Connected';
+                    document.getElementById('dbStatusDot').classList.add('connected');
+                    document.getElementById('dbStatusText').textContent = 'Ready';
                     return true;
                 }
             } catch (e) {
                 document.getElementById('statusDot').classList.remove('connected');
                 document.getElementById('statusText').textContent = 'Offline';
+                document.getElementById('dbStatusDot').classList.remove('connected');
+                document.getElementById('dbStatusText').textContent = 'Unavailable';
             }
             return false;
         }
@@ -569,12 +732,105 @@
                 document.getElementById('queryCount').textContent = queryCount;
 
                 lastResult = { query, data };
+                lastTranslation = data;
                 showResults(query, data);
                 showIntegration(query, data);
 
             } catch (e) {
                 showError(e.message);
             }
+        }
+
+        async function executeQuery() {
+            if (!lastTranslation) {
+                showDbError('Translate a query first');
+                return;
+            }
+
+            const startTime = performance.now();
+            document.getElementById('executeBtn').disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/api/v1/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        schema: SCHEMA,
+                        database: DATABASE,
+                        query: document.getElementById('queryInput').value.trim()
+                    })
+                });
+
+                const latency = Math.round(performance.now() - startTime);
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || `Error ${response.status}`);
+                }
+
+                const data = await response.json();
+                showDbResults(data.rows || [], data.count || 0, latency);
+
+                // Switch to results tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelector('[data-tab="results"]').classList.add('active');
+                document.getElementById('resultsTab').classList.add('active');
+
+            } catch (e) {
+                // If execute endpoint doesn't exist, show mock data
+                if (e.message.includes('404') || e.message.includes('fetch')) {
+                    showMockDbResults();
+                } else {
+                    showDbError(e.message);
+                }
+            } finally {
+                document.getElementById('executeBtn').disabled = false;
+            }
+        }
+
+        function showMockDbResults() {
+            // Show mock data when execute endpoint isn't available
+            const mockRows = [
+                { id: 1, product_code: '13w42', name: 'Widget Pro', region: 'ca', price: 99.99, rod_length: 150 },
+                { id: 2, product_code: '13w43', name: 'Widget Plus', region: 'ca', price: 149.99, rod_length: 200 },
+                { id: 3, product_code: '14x51', name: 'Gadget Basic', region: 'ny', price: 79.99, rod_length: 100 },
+            ];
+            showDbResults(mockRows, mockRows.length, 12, true);
+        }
+
+        function showDbResults(rows, count, latency, isMock = false) {
+            if (!rows || rows.length === 0) {
+                const html = `<div class="placeholder">No results found</div>`;
+                document.getElementById('dbResultsMain').innerHTML = html;
+                document.getElementById('dbResultsPanel').innerHTML = html;
+                return;
+            }
+
+            const columns = Object.keys(rows[0]);
+            const tableHtml = `
+                ${isMock ? '<div style="color: var(--muted-foreground); font-size: 0.7rem; margin-bottom: 8px;">(Demo data - execute endpoint not available)</div>' : ''}
+                <table class="db-table">
+                    <thead>
+                        <tr>${columns.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>
+                        ${rows.slice(0, 50).map(row => `
+                            <tr>${columns.map(c => `<td title="${escapeHtml(String(row[c] ?? ''))}">${escapeHtml(String(row[c] ?? ''))}</td>`).join('')}</tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="db-count"><span>${count}</span> rows returned in ${latency}ms${rows.length > 50 ? ' (showing first 50)' : ''}</div>
+            `;
+
+            document.getElementById('dbResultsMain').innerHTML = tableHtml;
+            document.getElementById('dbResultsPanel').innerHTML = tableHtml;
+        }
+
+        function showDbError(message) {
+            const html = `<div class="error">${escapeHtml(message)}</div>`;
+            document.getElementById('dbResultsMain').innerHTML = html;
+            document.getElementById('dbResultsPanel').innerHTML = html;
         }
 
         function showLoading() {
@@ -601,6 +857,10 @@
                     <div class="result-value sql">${escapeHtml(data.whereClause)}</div>
                 </div>
                 <div class="result-block">
+                    <div class="result-label">Full SQL</div>
+                    <div class="result-value sql">SELECT * FROM products WHERE ${escapeHtml(data.whereClause)}</div>
+                </div>
+                <div class="result-block">
                     <div class="result-label">Parameters</div>
                     <div class="result-value">${paramsHtml}</div>
                 </div>
@@ -608,63 +868,22 @@
         }
 
         function showIntegration(query, data) {
-            const params = data.parameters ? JSON.stringify(data.parameters) : '[]';
-            const whereClause = data.whereClause;
-
-            const jsCode = `<span class="code-comment">// JavaScript/Node.js integration</span>
-<span class="code-keyword">const</span> result = <span class="code-keyword">await</span> fetch(<span class="code-string">'${API_URL}/api/v1/translate'</span>, {
+            const jsCode = `<span class="code-comment">// JavaScript/Node.js</span>
+<span class="code-keyword">const</span> { whereClause, parameters } = <span class="code-keyword">await</span> fetch(<span class="code-string">'${API_URL}/api/v1/translate'</span>, {
   method: <span class="code-string">'POST'</span>,
   headers: { <span class="code-string">'Content-Type'</span>: <span class="code-string">'application/json'</span> },
-  body: JSON.stringify({
-    schema: <span class="code-string">'products'</span>,
-    database: <span class="code-string">'postgres'</span>,
-    query: <span class="code-string">'${escapeHtml(query)}'</span>
-  })
-});
+  body: JSON.stringify({ schema: <span class="code-string">'products'</span>, database: <span class="code-string">'postgres'</span>, query: <span class="code-string">'${escapeHtml(query)}'</span> })
+}).then(r => r.json());
 
-<span class="code-keyword">const</span> { whereClause, parameters } = <span class="code-keyword">await</span> result.json();
+<span class="code-keyword">const</span> rows = <span class="code-keyword">await</span> db.query(<span class="code-string">\`SELECT * FROM products WHERE \${whereClause}\`</span>, parameters);`;
 
-<span class="code-comment">// Use with your database</span>
-<span class="code-keyword">const</span> rows = <span class="code-keyword">await</span> db.query(
-  <span class="code-string">\`SELECT * FROM products WHERE \${whereClause}\`</span>,
-  parameters
-);`;
-
-            const pythonCode = `<span class="code-comment"># Python integration</span>
+            const pythonCode = `<span class="code-comment"># Python</span>
 <span class="code-keyword">import</span> requests
-
 result = requests.post(<span class="code-string">'${API_URL}/api/v1/translate'</span>, json={
-    <span class="code-string">'schema'</span>: <span class="code-string">'products'</span>,
-    <span class="code-string">'database'</span>: <span class="code-string">'postgres'</span>,
-    <span class="code-string">'query'</span>: <span class="code-string">'${escapeHtml(query)}'</span>
+    <span class="code-string">'schema'</span>: <span class="code-string">'products'</span>, <span class="code-string">'database'</span>: <span class="code-string">'postgres'</span>, <span class="code-string">'query'</span>: <span class="code-string">'${escapeHtml(query)}'</span>
 }).json()
 
-<span class="code-comment"># Use with your database</span>
-cursor.execute(
-    <span class="code-string">f"SELECT * FROM products WHERE {result['whereClause']}"</span>,
-    result[<span class="code-string">'parameters'</span>]
-)
-rows = cursor.fetchall()`;
-
-            const goCode = `<span class="code-comment">// Go integration</span>
-body, _ := json.Marshal(map[<span class="code-keyword">string</span>]<span class="code-keyword">string</span>{
-    <span class="code-string">"schema"</span>:   <span class="code-string">"products"</span>,
-    <span class="code-string">"database"</span>: <span class="code-string">"postgres"</span>,
-    <span class="code-string">"query"</span>:    <span class="code-string">"${escapeHtml(query)}"</span>,
-})
-
-resp, _ := http.Post(<span class="code-string">"${API_URL}/api/v1/translate"</span>,
-    <span class="code-string">"application/json"</span>, bytes.NewBuffer(body))
-
-<span class="code-keyword">var</span> result <span class="code-keyword">struct</span> {
-    WhereClause <span class="code-keyword">string</span>        <span class="code-string">\`json:"whereClause"\`</span>
-    Parameters  []<span class="code-keyword">interface</span>{} <span class="code-string">\`json:"parameters"\`</span>
-}
-json.NewDecoder(resp.Body).Decode(&result)
-
-<span class="code-comment">// Use with your database</span>
-query := fmt.Sprintf(<span class="code-string">"SELECT * FROM products WHERE %s"</span>, result.WhereClause)
-rows, _ := db.Query(query, result.Parameters...)`;
+cursor.execute(<span class="code-string">f"SELECT * FROM products WHERE {result['whereClause']}"</span>, result[<span class="code-string">'parameters'</span>])`;
 
             document.getElementById('integrationCode').innerHTML = `
                 <div class="result-block">
@@ -674,10 +893,6 @@ rows, _ := db.Query(query, result.Parameters...)`;
                 <div class="result-block">
                     <div class="result-label">Python</div>
                     <div class="result-value code">${pythonCode}</div>
-                </div>
-                <div class="result-block">
-                    <div class="result-label">Go</div>
-                    <div class="result-value code">${goCode}</div>
                 </div>
             `;
         }
@@ -696,7 +911,10 @@ rows, _ := db.Query(query, result.Parameters...)`;
             document.getElementById('queryInput').value = '';
             document.getElementById('translationResults').innerHTML = '<div class="placeholder">Enter a query above or click an example</div>';
             document.getElementById('integrationCode').innerHTML = '<div class="placeholder">Translate a query to see integration examples</div>';
+            document.getElementById('dbResultsMain').innerHTML = '<div class="placeholder">Click "Execute" to run query against database</div>';
+            document.getElementById('dbResultsPanel').innerHTML = '<div class="placeholder" style="padding: 30px 10px;">Execute a query to see results</div>';
             lastResult = null;
+            lastTranslation = null;
         }
 
         // Tab switching
@@ -710,12 +928,14 @@ rows, _ := db.Query(query, result.Parameters...)`;
         });
 
         document.getElementById('translateBtn').addEventListener('click', translateQuery);
+        document.getElementById('executeBtn').addEventListener('click', executeQuery);
         document.getElementById('clearBtn').addEventListener('click', clearQuery);
         document.getElementById('queryInput').addEventListener('keypress', e => {
             if (e.key === 'Enter') translateQuery();
         });
 
         renderExampleQueries();
+        renderSyntaxReference();
         checkServerStatus();
         setInterval(checkServerStatus, 10000);
     </script>

@@ -136,12 +136,11 @@ func TestParserRequiredOperator(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, node)
 
-			// For single required term
+			// For single required term - RequiredQuery per design doc
 			if tt.name == "Required term" {
-				unaryOp, ok := node.(*UnaryOp)
-				require.True(t, ok, "expected UnaryOp node")
-				assert.Equal(t, "+", unaryOp.Op)
-				assert.NotNil(t, unaryOp.Operand)
+				req, ok := node.(*RequiredQuery)
+				require.True(t, ok, "expected RequiredQuery node, got %T", node)
+				assert.NotNil(t, req.Query)
 			}
 		})
 	}
@@ -169,12 +168,11 @@ func TestParserProhibitedOperator(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, node)
 
-			// For single prohibited term
+			// For single prohibited term - ProhibitedQuery per design doc
 			if tt.name == "Prohibited term" {
-				unaryOp, ok := node.(*UnaryOp)
-				require.True(t, ok, "expected UnaryOp node")
-				assert.Equal(t, "-", unaryOp.Op)
-				assert.NotNil(t, unaryOp.Operand)
+				proh, ok := node.(*ProhibitedQuery)
+				require.True(t, ok, "expected ProhibitedQuery node, got %T", node)
+				assert.NotNil(t, proh.Query)
 			}
 		})
 	}
@@ -282,10 +280,8 @@ func TestParserErrors(t *testing.T) {
 		name  string
 		input string
 	}{
-		{
-			name:  "Missing colon",
-			input: "field value",
-		},
+		// Note: "field value" without colon is now valid per design (implicit OR)
+		// See design doc: "Default operator: Without AND/OR, terms are OR by default"
 		{
 			name:  "Unclosed parenthesis",
 			input: "(field:value",
