@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 )
 
 // Translator converts AST nodes to database-specific query formats.
 type Translator interface {
 	// Translate converts an AST node to database-specific output.
-	Translate(ast Node, schema *schema.Schema) (*TranslatorOutput, error)
+	Translate(ast parser.Node, schema *schema.Schema) (*TranslatorOutput, error)
 
 	// DatabaseType returns the database type this translator targets.
 	DatabaseType() string

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 )
 
@@ -25,7 +26,7 @@ func (p *PostgresTranslator) DatabaseType() string {
 }
 
 // Translate converts an AST node to a PostgreSQL query.
-func (p *PostgresTranslator) Translate(ast Node, schema *schema.Schema) (*TranslatorOutput, error) {
+func (p *PostgresTranslator) Translate(ast parser.Node, schema *schema.Schema) (*TranslatorOutput, error) {
 	// Reset state for new translation
 	p.paramCount = 0
 	p.params = make([]interface{}, 0)
@@ -40,13 +41,13 @@ func (p *PostgresTranslator) Translate(ast Node, schema *schema.Schema) (*Transl
 }
 
 // translateNode recursively translates AST nodes.
-func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateNode(node parser.Node, schema *schema.Schema) (string, error) {
 	switch n := node.(type) {
-	case *FieldQuery:
+	case *parser.FieldQuery:
 		return p.translateFieldQuery(n, schema)
-	case *BinaryOp:
+	case *parser.BinaryOp:
 		return p.translateBinaryOp(n, schema)
-	case *RangeQuery:
+	case *parser.RangeQuery:
 		return p.translateRangeQuery(n, schema)
 	default:
 		return "", fmt.Errorf("unsupported node type: %s", node.Type())
@@ -54,27 +55,27 @@ func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (st
 }
 
 // translateFieldQuery translates a simple field:value query.
-func (p *PostgresTranslator) translateFieldQuery(fq *FieldQuery, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateFieldQuery(fq *parser.FieldQuery, schema *schema.Schema) (string, error) {
 	// Validate field exists in schema
 	columnName, field, err := schema.ResolveField(fq.Field)
 	if err != nil {
 		return "", fmt.Errorf("field %s not found in schema %s", fq.Field, schema.Name)
 	}
 
-	// Note: Searchable field removed as it's not in the current schema design
-	_ = field // Use field if needed later
+	// Extract value from ValueNode
+	value := fq.Value.Value()
 
 	// Add parameter
 	p.paramCount++
-	p.params = append(p.params, fq.Value)
-	p.paramTypes = append(p.paramTypes, string(string(field.Type)))
+	p.params = append(p.params, value)
+	p.paramTypes = append(p.paramTypes, string(field.Type))
 
 	// Generate SQL with parameterized query (use resolved column name)
 	return fmt.Sprintf("%s = $%d", columnName, p.paramCount), nil
 }
 
 // translateBinaryOp translates AND/OR operations.
-func (p *PostgresTranslator) translateBinaryOp(bo *BinaryOp, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateBinaryOp(bo *parser.BinaryOp, schema *schema.Schema) (string, error) {
 	left, err := p.translateNode(bo.Left, schema)
 	if err != nil {
 		return "", err
@@ -101,32 +102,64 @@ func (p *PostgresTranslator) translateBinaryOp(bo *BinaryOp, schema *schema.Sche
 }
 
 // needsParentheses determines if a node needs parentheses.
-func (p *PostgresTranslator) needsParentheses(node Node) bool {
+func (p *PostgresTranslator) needsParentheses(node parser.Node) bool {
 	// Binary operations need parentheses when nested
-	_, isBinaryOp := node.(*BinaryOp)
+	_, isBinaryOp := node.(*parser.BinaryOp)
 	return isBinaryOp
 }
 
 // translateRangeQuery translates range queries like field:[start TO end].
-func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateRangeQuery(rq *parser.RangeQuery, schema *schema.Schema) (string, error) {
 	// Validate field exists in schema
 	columnName, field, err := schema.ResolveField(rq.Field)
 	if err != nil {
 		return "", fmt.Errorf("field %s not found in schema %s", rq.Field, schema.Name)
 	}
 
-	// Note: Searchable field removed as it's not in the current schema design
-	_ = field // Use field if needed later
+	// Extract values from ValueNodes
+	startValue := rq.Start.Value()
+	endValue := rq.End.Value()
 
-	// Handle inclusive vs exclusive ranges
+	// Handle wildcard bounds (unbounded ranges)
+	startIsWildcard := startValue == "*"
+	endIsWildcard := endValue == "*"
+
+	// Handle single-sided unbounded ranges
+	if startIsWildcard && !endIsWildcard {
+		// Only upper bound: field < or <= value
+		p.paramCount++
+		p.params = append(p.params, endValue)
+		p.paramTypes = append(p.paramTypes, string(field.Type))
+
+		op := "<"
+		if rq.InclusiveEnd {
+			op = "<="
+		}
+		return fmt.Sprintf("%s %s $%d", columnName, op, p.paramCount), nil
+	}
+
+	if !startIsWildcard && endIsWildcard {
+		// Only lower bound: field > or >= value
+		p.paramCount++
+		p.params = append(p.params, startValue)
+		p.paramTypes = append(p.paramTypes, string(field.Type))
+
+		op := ">"
+		if rq.InclusiveStart {
+			op = ">="
+		}
+		return fmt.Sprintf("%s %s $%d", columnName, op, p.paramCount), nil
+	}
+
+	// Both bounds specified
 	if rq.InclusiveStart && rq.InclusiveEnd {
 		// Both inclusive: BETWEEN
 		p.paramCount++
-		p.params = append(p.params, rq.Start)
+		p.params = append(p.params, startValue)
 		p.paramTypes = append(p.paramTypes, string(field.Type))
 
 		p.paramCount++
-		p.params = append(p.params, rq.End)
+		p.params = append(p.params, endValue)
 		p.paramTypes = append(p.paramTypes, string(field.Type))
 
 		return fmt.Sprintf("%s BETWEEN $%d AND $%d", columnName, p.paramCount-1, p.paramCount), nil
@@ -137,7 +170,7 @@ func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.
 
 	// Start condition
 	p.paramCount++
-	p.params = append(p.params, rq.Start)
+	p.params = append(p.params, startValue)
 	p.paramTypes = append(p.paramTypes, string(field.Type))
 
 	if rq.InclusiveStart {
@@ -148,7 +181,7 @@ func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.
 
 	// End condition
 	p.paramCount++
-	p.params = append(p.params, rq.End)
+	p.params = append(p.params, endValue)
 	p.paramTypes = append(p.paramTypes, string(field.Type))
 
 	if rq.InclusiveEnd {
