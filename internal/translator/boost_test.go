@@ -1,6 +1,7 @@
 package translator
 
 import (
+        "github.com/infiniv/rsearch/internal/parser"
 	"testing"
 
 	"github.com/infiniv/rsearch/internal/schema"
@@ -19,8 +20,8 @@ func TestPostgresTranslator_BoostQuery_SimpleField(t *testing.T) {
 		schema.SchemaOptions{})
 
 	// name:widget^2
-	ast := &BoostQuery{
-		Query: &FieldQuery{
+	ast := &parser.BoostQuery{
+		Query: &parser.FieldQuery{
 			Field: "name",
 			Value: "widget",
 		},
@@ -56,8 +57,8 @@ func TestPostgresTranslator_BoostQuery_HighBoost(t *testing.T) {
 		schema.SchemaOptions{})
 
 	// name:widget^4
-	ast := &BoostQuery{
-		Query: &FieldQuery{
+	ast := &parser.BoostQuery{
+		Query: &parser.FieldQuery{
 			Field: "name",
 			Value: "widget",
 		},
@@ -86,16 +87,16 @@ func TestPostgresTranslator_BoostQuery_WithBinaryOp(t *testing.T) {
 		schema.SchemaOptions{})
 
 	// name:widget^2 AND status:active
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "AND",
-		Left: &BoostQuery{
-			Query: &FieldQuery{
+		Left: &parser.BoostQuery{
+			Query: &parser.FieldQuery{
 				Field: "name",
 				Value: "widget",
 			},
 			Boost: 2.0,
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "status",
 			Value: "active",
 		},
@@ -127,17 +128,17 @@ func TestPostgresTranslator_BoostQuery_MultipleBoosts(t *testing.T) {
 		schema.SchemaOptions{})
 
 	// name:widget^2 OR description:gadget^3
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "OR",
-		Left: &BoostQuery{
-			Query: &FieldQuery{
+		Left: &parser.BoostQuery{
+			Query: &parser.FieldQuery{
 				Field: "name",
 				Value: "widget",
 			},
 			Boost: 2.0,
 		},
-		Right: &BoostQuery{
-			Query: &FieldQuery{
+		Right: &parser.BoostQuery{
+			Query: &parser.FieldQuery{
 				Field: "description",
 				Value: "gadget",
 			},
@@ -171,14 +172,14 @@ func TestPostgresTranslator_BoostQuery_NestedBoost(t *testing.T) {
 		schema.SchemaOptions{})
 
 	// (name:widget AND region:us)^2
-	ast := &BoostQuery{
-		Query: &BinaryOp{
+	ast := &parser.BoostQuery{
+		Query: &parser.BinaryOp{
 			Op: "AND",
-			Left: &FieldQuery{
+			Left: &parser.FieldQuery{
 				Field: "name",
 				Value: "widget",
 			},
-			Right: &FieldQuery{
+			Right: &parser.FieldQuery{
 				Field: "region",
 				Value: "us",
 			},
@@ -211,8 +212,8 @@ func TestPostgresTranslator_BoostQuery_RangeQuery(t *testing.T) {
 		schema.SchemaOptions{})
 
 	// price:[10 TO 100]^1.5
-	ast := &BoostQuery{
-		Query: &RangeQuery{
+	ast := &parser.BoostQuery{
+		Query: &parser.RangeQuery{
 			Field:          "price",
 			Start:          10,
 			End:            100,

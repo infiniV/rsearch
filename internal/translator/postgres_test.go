@@ -1,6 +1,7 @@
 package translator
 
 import (
+        "github.com/infiniv/rsearch/internal/parser"
 	"testing"
 
 	"github.com/infiniv/rsearch/internal/schema"
@@ -20,7 +21,7 @@ func TestPostgresTranslator_SimpleFieldQuery(t *testing.T) {
 		"product_code": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &FieldQuery{
+	ast := &parser.FieldQuery{
 		Field: "product_code",
 		Value: "13w42",
 	}
@@ -42,7 +43,7 @@ func TestPostgresTranslator_NumberFieldQuery(t *testing.T) {
 		"rod_length": {Type: schema.TypeInteger},
 	}, schema.SchemaOptions{})
 
-	ast := &FieldQuery{
+	ast := &parser.FieldQuery{
 		Field: "rod_length",
 		Value: "100",
 	}
@@ -63,13 +64,13 @@ func TestPostgresTranslator_BooleanAND(t *testing.T) {
 		"region":       {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "AND",
-		Left: &FieldQuery{
+		Left: &parser.FieldQuery{
 			Field: "product_code",
 			Value: "13w42",
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "region",
 			Value: "ca",
 		},
@@ -92,13 +93,13 @@ func TestPostgresTranslator_BooleanOR(t *testing.T) {
 		"region": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "OR",
-		Left: &FieldQuery{
+		Left: &parser.FieldQuery{
 			Field: "region",
 			Value: "ca",
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "region",
 			Value: "us",
 		},
@@ -120,7 +121,7 @@ func TestPostgresTranslator_RangeQuery(t *testing.T) {
 		"rod_length": {Type: schema.TypeInteger},
 	}, schema.SchemaOptions{})
 
-	ast := &RangeQuery{
+	ast := &parser.RangeQuery{
 		Field:          "rod_length",
 		Start:          50,
 		End:            500,
@@ -145,7 +146,7 @@ func TestPostgresTranslator_RangeQuery_Exclusive(t *testing.T) {
 		"price": {Type: schema.TypeFloat},
 	}, schema.SchemaOptions{})
 
-	ast := &RangeQuery{
+	ast := &parser.RangeQuery{
 		Field:          "price",
 		Start:          10,
 		End:            20,
@@ -169,7 +170,7 @@ func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
 		"product_code": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &FieldQuery{
+	ast := &parser.FieldQuery{
 		Field: "invalid_field",
 		Value: "test",
 	}
@@ -190,20 +191,20 @@ func TestPostgresTranslator_ComplexNestedQuery(t *testing.T) {
 	}, schema.SchemaOptions{})
 
 	// (productCode:13w42 AND region:ca) OR status:active
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "OR",
-		Left: &BinaryOp{
+		Left: &parser.BinaryOp{
 			Op: "AND",
-			Left: &FieldQuery{
+			Left: &parser.FieldQuery{
 				Field: "product_code",
 				Value: "13w42",
 			},
-			Right: &FieldQuery{
+			Right: &parser.FieldQuery{
 				Field: "region",
 				Value: "ca",
 			},
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "status",
 			Value: "active",
 		},
@@ -229,20 +230,20 @@ func TestPostgresTranslator_ParameterNumbering(t *testing.T) {
 	}, schema.SchemaOptions{})
 
 	// a:1 AND b:2 AND c:3
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "AND",
-		Left: &BinaryOp{
+		Left: &parser.BinaryOp{
 			Op: "AND",
-			Left: &FieldQuery{
+			Left: &parser.FieldQuery{
 				Field: "a",
 				Value: "1",
 			},
-			Right: &FieldQuery{
+			Right: &parser.FieldQuery{
 				Field: "b",
 				Value: "2",
 			},
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "c",
 			Value: "3",
 		},
@@ -265,7 +266,7 @@ func TestPostgresTranslator_ExistsQuery(t *testing.T) {
 		"name": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &ExistsQuery{
+	ast := &parser.ExistsQuery{
 		Field: "name",
 	}
 
@@ -285,7 +286,7 @@ func TestPostgresTranslator_ExistsQuery_JSONField(t *testing.T) {
 		"metadata": {Type: schema.TypeJSON},
 	}, schema.SchemaOptions{})
 
-	ast := &ExistsQuery{
+	ast := &parser.ExistsQuery{
 		Field: "metadata",
 	}
 
@@ -304,9 +305,9 @@ func TestPostgresTranslator_NotExistsQuery(t *testing.T) {
 		"description": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &UnaryOp{
+	ast := &parser.UnaryOp{
 		Op: "NOT",
-		Operand: &ExistsQuery{
+		Operand: &parser.ExistsQuery{
 			Field: "description",
 		},
 	}
@@ -326,9 +327,9 @@ func TestPostgresTranslator_NotExistsQuery_JSONField(t *testing.T) {
 		"tags": {Type: schema.TypeJSON},
 	}, schema.SchemaOptions{})
 
-	ast := &UnaryOp{
+	ast := &parser.UnaryOp{
 		Op: "NOT",
-		Operand: &ExistsQuery{
+		Operand: &parser.ExistsQuery{
 			Field: "tags",
 		},
 	}
@@ -350,12 +351,12 @@ func TestPostgresTranslator_ExistsQuery_WithOtherConditions(t *testing.T) {
 	}, schema.SchemaOptions{})
 
 	// _exists_:name AND region:ca
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "AND",
-		Left: &ExistsQuery{
+		Left: &parser.ExistsQuery{
 			Field: "name",
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "region",
 			Value: "ca",
 		},
@@ -376,7 +377,7 @@ func TestPostgresTranslator_ExistsQuery_InvalidField(t *testing.T) {
 		"name": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &ExistsQuery{
+	ast := &parser.ExistsQuery{
 		Field: "invalid_field",
 	}
 
@@ -396,18 +397,18 @@ func TestPostgresTranslator_ComplexExistsQuery(t *testing.T) {
 	}, schema.SchemaOptions{})
 
 	// (_exists_:name AND _exists_:description) OR price:100
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "OR",
-		Left: &BinaryOp{
+		Left: &parser.BinaryOp{
 			Op: "AND",
-			Left: &ExistsQuery{
+			Left: &parser.ExistsQuery{
 				Field: "name",
 			},
-			Right: &ExistsQuery{
+			Right: &parser.ExistsQuery{
 				Field: "description",
 			},
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "price",
 			Value: "100",
 		},

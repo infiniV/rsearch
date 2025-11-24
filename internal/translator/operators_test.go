@@ -28,11 +28,11 @@ func TestTranslatorAndOperator(t *testing.T) {
 				Op: "AND",
 				Left: &parser.FieldQuery{
 					Field: "field1",
-					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "value1", Pos: parser.parser.Position{}},
 				},
 				Right: &parser.FieldQuery{
 					Field: "field2",
-					Value: &parser.TermValue{Term: "value2", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "value2", Pos: parser.parser.Position{}},
 				},
 			},
 			expectedSQL:    "field1 = $1 AND field2 = $2",
@@ -70,11 +70,11 @@ func TestTranslatorOrOperator(t *testing.T) {
 				Op: "OR",
 				Left: &parser.FieldQuery{
 					Field: "field1",
-					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "value1", Pos: parser.parser.Position{}},
 				},
 				Right: &parser.FieldQuery{
 					Field: "field2",
-					Value: &parser.TermValue{Term: "value2", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "value2", Pos: parser.parser.Position{}},
 				},
 			},
 			expectedSQL:    "field1 = $1 OR field2 = $2",
@@ -111,7 +111,7 @@ func TestTranslatorNotOperator(t *testing.T) {
 				Op: "NOT",
 				Operand: &parser.FieldQuery{
 					Field: "field1",
-					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "value1", Pos: parser.parser.Position{}},
 				},
 			},
 			expectedSQL:    "NOT field1 = $1",
@@ -148,7 +148,7 @@ func TestTranslatorRequiredOperator(t *testing.T) {
 				Op: "+",
 				Operand: &parser.FieldQuery{
 					Field: "field1",
-					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "value1", Pos: parser.parser.Position{}},
 				},
 			},
 			expectedSQL:    "field1 = $1",
@@ -185,7 +185,7 @@ func TestTranslatorProhibitedOperator(t *testing.T) {
 				Op: "-",
 				Operand: &parser.FieldQuery{
 					Field: "field1",
-					Value: &parser.TermValue{Term: "value1", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "value1", Pos: parser.parser.Position{}},
 				},
 			},
 			expectedSQL:    "NOT field1 = $1",
@@ -226,16 +226,16 @@ func TestTranslatorComplexExpressions(t *testing.T) {
 					Op: "OR",
 					Left: &parser.FieldQuery{
 						Field: "a",
-						Value: &parser.TermValue{Term: "1", Pos: parser.Position{}},
+						Value: &parser.parser.TermValue{Term: "1", Pos: parser.parser.Position{}},
 					},
 					Right: &parser.FieldQuery{
 						Field: "b",
-						Value: &parser.TermValue{Term: "2", Pos: parser.Position{}},
+						Value: &parser.parser.TermValue{Term: "2", Pos: parser.parser.Position{}},
 					},
 				},
 				Right: &parser.FieldQuery{
 					Field: "c",
-					Value: &parser.TermValue{Term: "3", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "3", Pos: parser.parser.Position{}},
 				},
 			},
 			expectedSQL:    "(a = $1 OR b = $2) AND c = $3",
@@ -249,12 +249,12 @@ func TestTranslatorComplexExpressions(t *testing.T) {
 					Op: "NOT",
 					Operand: &parser.FieldQuery{
 						Field: "a",
-						Value: &parser.TermValue{Term: "1", Pos: parser.Position{}},
+						Value: &parser.parser.TermValue{Term: "1", Pos: parser.parser.Position{}},
 					},
 				},
 				Right: &parser.FieldQuery{
 					Field: "b",
-					Value: &parser.TermValue{Term: "2", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "2", Pos: parser.parser.Position{}},
 				},
 			},
 			expectedSQL:    "NOT a = $1 AND b = $2",
@@ -268,14 +268,14 @@ func TestTranslatorComplexExpressions(t *testing.T) {
 					Op: "+",
 					Operand: &parser.FieldQuery{
 						Field: "a",
-						Value: &parser.TermValue{Term: "required", Pos: parser.Position{}},
+						Value: &parser.parser.TermValue{Term: "required", Pos: parser.parser.Position{}},
 					},
 				},
 				Right: &parser.UnaryOp{
 					Op: "-",
 					Operand: &parser.FieldQuery{
 						Field: "b",
-						Value: &parser.TermValue{Term: "prohibited", Pos: parser.Position{}},
+						Value: &parser.parser.TermValue{Term: "prohibited", Pos: parser.parser.Position{}},
 					},
 				},
 			},
@@ -315,17 +315,17 @@ func TestTranslatorOperatorPrecedence(t *testing.T) {
 				Op: "OR",
 				Left: &parser.FieldQuery{
 					Field: "a",
-					Value: &parser.TermValue{Term: "1", Pos: parser.Position{}},
+					Value: &parser.parser.TermValue{Term: "1", Pos: parser.parser.Position{}},
 				},
 				Right: &parser.BinaryOp{
 					Op: "AND",
 					Left: &parser.FieldQuery{
 						Field: "b",
-						Value: &parser.TermValue{Term: "2", Pos: parser.Position{}},
+						Value: &parser.parser.TermValue{Term: "2", Pos: parser.parser.Position{}},
 					},
 					Right: &parser.FieldQuery{
 						Field: "c",
-						Value: &parser.TermValue{Term: "3", Pos: parser.Position{}},
+						Value: &parser.parser.TermValue{Term: "3", Pos: parser.parser.Position{}},
 					},
 				},
 			},
