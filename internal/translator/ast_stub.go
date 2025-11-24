@@ -39,3 +39,24 @@ type RangeQuery struct {
 func (r *RangeQuery) Type() string {
 	return "range_query"
 }
+
+// WildcardQuery represents a wildcard query like field:wid* or field:wi?get.
+// Supports * (zero or more chars) and ? (single char) wildcards.
+type WildcardQuery struct {
+	Field   string
+	Pattern string
+}
+
+func (w *WildcardQuery) Type() string {
+	return "wildcard_query"
+}
+
+// RegexQuery represents a regex query like field:/pattern/.
+type RegexQuery struct {
+	Field   string
+	Pattern string
+}
+
+func (rq *RegexQuery) Type() string {
+	return "regex_query"
+}
