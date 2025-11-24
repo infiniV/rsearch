@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 )
 
@@ -25,7 +26,7 @@ func (p *PostgresTranslator) DatabaseType() string {
 }
 
 // Translate converts an AST node to a PostgreSQL query.
-func (p *PostgresTranslator) Translate(ast Node, schema *schema.Schema) (*TranslatorOutput, error) {
+func (p *PostgresTranslator) Translate(ast parser.Node, schema *schema.Schema) (*TranslatorOutput, error) {
 	// Reset state for new translation
 	p.paramCount = 0
 	p.params = make([]interface{}, 0)
@@ -40,15 +41,15 @@ func (p *PostgresTranslator) Translate(ast Node, schema *schema.Schema) (*Transl
 }
 
 // translateNode recursively translates AST nodes.
-func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateNode(node parser.Node, schema *schema.Schema) (string, error) {
 	switch n := node.(type) {
-	case *FieldQuery:
+	case *parser.FieldQuery:
 		return p.translateFieldQuery(n, schema)
-	case *BinaryOp:
+	case *parser.BinaryOp:
 		return p.translateBinaryOp(n, schema)
-	case *RangeQuery:
+	case *parser.RangeQuery:
 		return p.translateRangeQuery(n, schema)
-	case *FuzzyQuery:
+	case *parser.FuzzyQuery:
 		return p.translateFuzzyQuery(n, schema)
 	default:
 		return "", fmt.Errorf("unsupported node type: %s", node.Type())
@@ -56,7 +57,7 @@ func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (st
 }
 
 // translateFieldQuery translates a simple field:value query.
-func (p *PostgresTranslator) translateFieldQuery(fq *FieldQuery, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateFieldQuery(fq *parser.FieldQuery, schema *schema.Schema) (string, error) {
 	// Validate field exists in schema
 	columnName, field, err := schema.ResolveField(fq.Field)
 	if err != nil {
@@ -76,7 +77,7 @@ func (p *PostgresTranslator) translateFieldQuery(fq *FieldQuery, schema *schema.
 }
 
 // translateBinaryOp translates AND/OR operations.
-func (p *PostgresTranslator) translateBinaryOp(bo *BinaryOp, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateBinaryOp(bo *parser.BinaryOp, schema *schema.Schema) (string, error) {
 	left, err := p.translateNode(bo.Left, schema)
 	if err != nil {
 		return "", err
@@ -103,14 +104,14 @@ func (p *PostgresTranslator) translateBinaryOp(bo *BinaryOp, schema *schema.Sche
 }
 
 // needsParentheses determines if a node needs parentheses.
-func (p *PostgresTranslator) needsParentheses(node Node) bool {
+func (p *PostgresTranslator) needsParentheses(node parser.Node) bool {
 	// Binary operations need parentheses when nested
-	_, isBinaryOp := node.(*BinaryOp)
+	_, isBinaryOp := node.(*parser.BinaryOp)
 	return isBinaryOp
 }
 
 // translateRangeQuery translates range queries like field:[start TO end].
-func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateRangeQuery(rq *parser.RangeQuery, schema *schema.Schema) (string, error) {
 	// Validate field exists in schema
 	columnName, field, err := schema.ResolveField(rq.Field)
 	if err != nil {
@@ -163,7 +164,7 @@ func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.
 }
 
 // translateFuzzyQuery translates fuzzy search queries like field:term~ or field:term~1.
-func (p *PostgresTranslator) translateFuzzyQuery(fq *FuzzyQuery, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateFuzzyQuery(fq *parser.FuzzyQuery, schema *schema.Schema) (string, error) {
 	// Check if fuzzy search is enabled in schema options
 	if !schema.Options.EnabledFeatures.Fuzzy {
 		return "", fmt.Errorf("fuzzy search requires pg_trgm extension. Enable in schema or use wildcards instead: %s:*", fq.Field)
