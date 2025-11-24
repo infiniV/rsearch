@@ -3,6 +3,7 @@ package translator
 import (
 	"testing"
 
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -108,7 +109,7 @@ type MockTranslator struct {
 	err    error
 }
 
-func (m *MockTranslator) Translate(ast Node, schema *schema.Schema) (*TranslatorOutput, error) {
+func (m *MockTranslator) Translate(ast parser.Node, schema *schema.Schema) (*TranslatorOutput, error) {
 	if m.err != nil {
 		return nil, m.err
 	}

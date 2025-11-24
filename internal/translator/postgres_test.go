@@ -3,6 +3,7 @@ package translator
 import (
 	"testing"
 
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,9 +21,9 @@ func TestPostgresTranslator_SimpleFieldQuery(t *testing.T) {
 		"product_code": {Type: schema.TypeText, Column: "product_code"},
 	}, schema.SchemaOptions{})
 
-	ast := &FieldQuery{
+	ast := &parser.FieldQuery{
 		Field: "product_code",
-		Value: "13w42",
+		Value: &parser.TermValue{Term: "13w42"},
 	}
 
 	output, err := translator.Translate(ast, testSchema)
@@ -32,7 +33,7 @@ func TestPostgresTranslator_SimpleFieldQuery(t *testing.T) {
 	assert.Equal(t, "product_code = $1", output.WhereClause)
 	assert.Len(t, output.Parameters, 1)
 	assert.Equal(t, "13w42", output.Parameters[0])
-	assert.Equal(t, []string{string(schema.TypeText)}, output.ParameterTypes)
+	assert.Equal(t, []string{"text"}, output.ParameterTypes)
 }
 
 func TestPostgresTranslator_NumberFieldQuery(t *testing.T) {
@@ -42,9 +43,9 @@ func TestPostgresTranslator_NumberFieldQuery(t *testing.T) {
 		"rod_length": {Type: schema.TypeInteger, Column: "rod_length"},
 	}, schema.SchemaOptions{})
 
-	ast := &FieldQuery{
+	ast := &parser.FieldQuery{
 		Field: "rod_length",
-		Value: "100",
+		Value: &parser.NumberValue{Number: "100"},
 	}
 
 	output, err := translator.Translate(ast, testSchema)
@@ -52,7 +53,7 @@ func TestPostgresTranslator_NumberFieldQuery(t *testing.T) {
 	assert.NotNil(t, output)
 	assert.Equal(t, "rod_length = $1", output.WhereClause)
 	assert.Equal(t, "100", output.Parameters[0])
-	assert.Equal(t, []string{string(schema.TypeInteger)}, output.ParameterTypes)
+	assert.Equal(t, []string{"integer"}, output.ParameterTypes)
 }
 
 func TestPostgresTranslator_BooleanAND(t *testing.T) {
@@ -63,15 +64,15 @@ func TestPostgresTranslator_BooleanAND(t *testing.T) {
 		"region":       {Type: schema.TypeText, Column: "region"},
 	}, schema.SchemaOptions{})
 
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "AND",
-		Left: &FieldQuery{
+		Left: &parser.FieldQuery{
 			Field: "product_code",
-			Value: "13w42",
+			Value: &parser.TermValue{Term: "13w42"},
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "region",
-			Value: "ca",
+			Value: &parser.TermValue{Term: "ca"},
 		},
 	}
 
@@ -82,7 +83,7 @@ func TestPostgresTranslator_BooleanAND(t *testing.T) {
 	assert.Len(t, output.Parameters, 2)
 	assert.Equal(t, "13w42", output.Parameters[0])
 	assert.Equal(t, "ca", output.Parameters[1])
-	assert.Equal(t, []string{string(schema.TypeText), string(schema.TypeText)}, output.ParameterTypes)
+	assert.Equal(t, []string{"text", "text"}, output.ParameterTypes)
 }
 
 func TestPostgresTranslator_BooleanOR(t *testing.T) {
@@ -92,15 +93,15 @@ func TestPostgresTranslator_BooleanOR(t *testing.T) {
 		"region": {Type: schema.TypeText, Column: "region"},
 	}, schema.SchemaOptions{})
 
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "OR",
-		Left: &FieldQuery{
+		Left: &parser.FieldQuery{
 			Field: "region",
-			Value: "ca",
+			Value: &parser.TermValue{Term: "ca"},
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "region",
-			Value: "us",
+			Value: &parser.TermValue{Term: "us"},
 		},
 	}
 
@@ -120,10 +121,10 @@ func TestPostgresTranslator_RangeQuery(t *testing.T) {
 		"rod_length": {Type: schema.TypeInteger, Column: "rod_length"},
 	}, schema.SchemaOptions{})
 
-	ast := &RangeQuery{
+	ast := &parser.RangeQuery{
 		Field:          "rod_length",
-		Start:          50,
-		End:            500,
+		Start:          &parser.NumberValue{Number: "50"},
+		End:            &parser.NumberValue{Number: "500"},
 		InclusiveStart: true,
 		InclusiveEnd:   true,
 	}
@@ -133,22 +134,22 @@ func TestPostgresTranslator_RangeQuery(t *testing.T) {
 	assert.NotNil(t, output)
 	assert.Equal(t, "rod_length BETWEEN $1 AND $2", output.WhereClause)
 	assert.Len(t, output.Parameters, 2)
-	assert.Equal(t, 50, output.Parameters[0])
-	assert.Equal(t, 500, output.Parameters[1])
-	assert.Equal(t, []string{string(schema.TypeInteger), string(schema.TypeInteger)}, output.ParameterTypes)
+	assert.Equal(t, "50", output.Parameters[0])
+	assert.Equal(t, "500", output.Parameters[1])
+	assert.Equal(t, []string{"integer", "integer"}, output.ParameterTypes)
 }
 
 func TestPostgresTranslator_RangeQuery_Exclusive(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"price": {Type: schema.TypeInteger, Column: "price"},
+		"price": {Type: schema.TypeFloat, Column: "price"},
 	}, schema.SchemaOptions{})
 
-	ast := &RangeQuery{
+	ast := &parser.RangeQuery{
 		Field:          "price",
-		Start:          10,
-		End:            20,
+		Start:          &parser.NumberValue{Number: "10"},
+		End:            &parser.NumberValue{Number: "20"},
 		InclusiveStart: false,
 		InclusiveEnd:   false,
 	}
@@ -158,8 +159,8 @@ func TestPostgresTranslator_RangeQuery_Exclusive(t *testing.T) {
 	assert.NotNil(t, output)
 	assert.Equal(t, "price > $1 AND price < $2", output.WhereClause)
 	assert.Len(t, output.Parameters, 2)
-	assert.Equal(t, 10, output.Parameters[0])
-	assert.Equal(t, 20, output.Parameters[1])
+	assert.Equal(t, "10", output.Parameters[0])
+	assert.Equal(t, "20", output.Parameters[1])
 }
 
 func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
@@ -169,9 +170,9 @@ func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
 		"product_code": {Type: schema.TypeText, Column: "product_code"},
 	}, schema.SchemaOptions{})
 
-	ast := &FieldQuery{
+	ast := &parser.FieldQuery{
 		Field: "invalid_field",
-		Value: "test",
+		Value: &parser.TermValue{Term: "test"},
 	}
 
 	output, err := translator.Translate(ast, testSchema)
@@ -179,8 +180,6 @@ func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
 	assert.Nil(t, output)
 	assert.Contains(t, err.Error(), "not found")
 }
-
-// TestPostgresTranslator_FieldNotSearchable removed - Searchable field is no longer part of schema
 
 func TestPostgresTranslator_ComplexNestedQuery(t *testing.T) {
 	translator := NewPostgresTranslator()
@@ -192,22 +191,22 @@ func TestPostgresTranslator_ComplexNestedQuery(t *testing.T) {
 	}, schema.SchemaOptions{})
 
 	// (productCode:13w42 AND region:ca) OR status:active
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "OR",
-		Left: &BinaryOp{
+		Left: &parser.BinaryOp{
 			Op: "AND",
-			Left: &FieldQuery{
+			Left: &parser.FieldQuery{
 				Field: "product_code",
-				Value: "13w42",
+				Value: &parser.TermValue{Term: "13w42"},
 			},
-			Right: &FieldQuery{
+			Right: &parser.FieldQuery{
 				Field: "region",
-				Value: "ca",
+				Value: &parser.TermValue{Term: "ca"},
 			},
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "status",
-			Value: "active",
+			Value: &parser.TermValue{Term: "active"},
 		},
 	}
 
@@ -231,22 +230,22 @@ func TestPostgresTranslator_ParameterNumbering(t *testing.T) {
 	}, schema.SchemaOptions{})
 
 	// a:1 AND b:2 AND c:3
-	ast := &BinaryOp{
+	ast := &parser.BinaryOp{
 		Op: "AND",
-		Left: &BinaryOp{
+		Left: &parser.BinaryOp{
 			Op: "AND",
-			Left: &FieldQuery{
+			Left: &parser.FieldQuery{
 				Field: "a",
-				Value: "1",
+				Value: &parser.TermValue{Term: "1"},
 			},
-			Right: &FieldQuery{
+			Right: &parser.FieldQuery{
 				Field: "b",
-				Value: "2",
+				Value: &parser.TermValue{Term: "2"},
 			},
 		},
-		Right: &FieldQuery{
+		Right: &parser.FieldQuery{
 			Field: "c",
-			Value: "3",
+			Value: &parser.TermValue{Term: "3"},
 		},
 	}
 
