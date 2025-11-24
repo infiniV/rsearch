@@ -282,8 +282,11 @@ No conflicts (separate files)
 - [x] Exists queries (_exists_ keyword)
 
 ### Phase 4: Documentation & Testing 🔄 IN PROGRESS
-- [ ] Fix test suite (translator, API, parser edge cases)
-- [ ] Wire parser to API endpoint
+- [x] Fix translator test suite (all 60+ tests passing)
+- [x] Fix API test suite (all tests passing)
+- [x] Wire parser to API endpoint (fully functional)
+- [x] Fix operator normalization (&&→AND, ||→OR, !→NOT)
+- [ ] Fix remaining parser edge cases (non-blocking)
 - [ ] Test infrastructure
 - [ ] Documentation generator
 - [ ] Dev environment
