@@ -18,16 +18,13 @@ func main() {
 	schemaRegistry := schema.NewRegistry()
 
 	// Create a test schema
-	productsSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]*schema.Field{
-			"product_code": {Name: "product_code", Type: "text", Searchable: true},
-			"region":       {Name: "region", Type: "text", Searchable: true},
-			"rod_length":   {Name: "rod_length", Type: "number", Searchable: true},
-			"price":        {Name: "price", Type: "number", Searchable: true},
-			"status":       {Name: "status", Type: "text", Searchable: true},
-		},
-	}
+	productsSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText},
+		"region":       {Type: schema.TypeText},
+		"rod_length":   {Type: schema.TypeInteger},
+		"price":        {Type: schema.TypeFloat},
+		"status":       {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
 
 	if err := schemaRegistry.Register(productsSchema); err != nil {
 		log.Fatal(err)

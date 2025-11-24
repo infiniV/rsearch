@@ -3,7 +3,6 @@ package translator
 import (
 	"testing"
 
-	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,12 +17,12 @@ func TestPostgresTranslator_SimpleFieldQuery(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"product_code": {Type: schema.TypeText, Column: "product_code"},
+		"product_code": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &parser.FieldQuery{
+	ast := &FieldQuery{
 		Field: "product_code",
-		Value: &parser.TermValue{Term: "13w42"},
+		Value: "13w42",
 	}
 
 	output, err := translator.Translate(ast, testSchema)
@@ -40,12 +39,12 @@ func TestPostgresTranslator_NumberFieldQuery(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"rod_length": {Type: schema.TypeInteger, Column: "rod_length"},
+		"rod_length": {Type: schema.TypeInteger},
 	}, schema.SchemaOptions{})
 
-	ast := &parser.FieldQuery{
+	ast := &FieldQuery{
 		Field: "rod_length",
-		Value: &parser.NumberValue{Number: "100"},
+		Value: "100",
 	}
 
 	output, err := translator.Translate(ast, testSchema)
@@ -60,19 +59,19 @@ func TestPostgresTranslator_BooleanAND(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"product_code": {Type: schema.TypeText, Column: "product_code"},
-		"region":       {Type: schema.TypeText, Column: "region"},
+		"product_code": {Type: schema.TypeText},
+		"region":       {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &parser.BinaryOp{
+	ast := &BinaryOp{
 		Op: "AND",
-		Left: &parser.FieldQuery{
+		Left: &FieldQuery{
 			Field: "product_code",
-			Value: &parser.TermValue{Term: "13w42"},
+			Value: "13w42",
 		},
-		Right: &parser.FieldQuery{
+		Right: &FieldQuery{
 			Field: "region",
-			Value: &parser.TermValue{Term: "ca"},
+			Value: "ca",
 		},
 	}
 
@@ -90,18 +89,18 @@ func TestPostgresTranslator_BooleanOR(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"region": {Type: schema.TypeText, Column: "region"},
+		"region": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &parser.BinaryOp{
+	ast := &BinaryOp{
 		Op: "OR",
-		Left: &parser.FieldQuery{
+		Left: &FieldQuery{
 			Field: "region",
-			Value: &parser.TermValue{Term: "ca"},
+			Value: "ca",
 		},
-		Right: &parser.FieldQuery{
+		Right: &FieldQuery{
 			Field: "region",
-			Value: &parser.TermValue{Term: "us"},
+			Value: "us",
 		},
 	}
 
@@ -118,13 +117,13 @@ func TestPostgresTranslator_RangeQuery(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"rod_length": {Type: schema.TypeInteger, Column: "rod_length"},
+		"rod_length": {Type: schema.TypeInteger},
 	}, schema.SchemaOptions{})
 
-	ast := &parser.RangeQuery{
+	ast := &RangeQuery{
 		Field:          "rod_length",
-		Start:          &parser.NumberValue{Number: "50"},
-		End:            &parser.NumberValue{Number: "500"},
+		Start:          50,
+		End:            500,
 		InclusiveStart: true,
 		InclusiveEnd:   true,
 	}
@@ -134,8 +133,8 @@ func TestPostgresTranslator_RangeQuery(t *testing.T) {
 	assert.NotNil(t, output)
 	assert.Equal(t, "rod_length BETWEEN $1 AND $2", output.WhereClause)
 	assert.Len(t, output.Parameters, 2)
-	assert.Equal(t, "50", output.Parameters[0])
-	assert.Equal(t, "500", output.Parameters[1])
+	assert.Equal(t, 50, output.Parameters[0])
+	assert.Equal(t, 500, output.Parameters[1])
 	assert.Equal(t, []string{"integer", "integer"}, output.ParameterTypes)
 }
 
@@ -143,13 +142,13 @@ func TestPostgresTranslator_RangeQuery_Exclusive(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"price": {Type: schema.TypeFloat, Column: "price"},
+		"price": {Type: schema.TypeFloat},
 	}, schema.SchemaOptions{})
 
-	ast := &parser.RangeQuery{
+	ast := &RangeQuery{
 		Field:          "price",
-		Start:          &parser.NumberValue{Number: "10"},
-		End:            &parser.NumberValue{Number: "20"},
+		Start:          10,
+		End:            20,
 		InclusiveStart: false,
 		InclusiveEnd:   false,
 	}
@@ -159,20 +158,20 @@ func TestPostgresTranslator_RangeQuery_Exclusive(t *testing.T) {
 	assert.NotNil(t, output)
 	assert.Equal(t, "price > $1 AND price < $2", output.WhereClause)
 	assert.Len(t, output.Parameters, 2)
-	assert.Equal(t, "10", output.Parameters[0])
-	assert.Equal(t, "20", output.Parameters[1])
+	assert.Equal(t, 10, output.Parameters[0])
+	assert.Equal(t, 20, output.Parameters[1])
 }
 
 func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"product_code": {Type: schema.TypeText, Column: "product_code"},
+		"product_code": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
-	ast := &parser.FieldQuery{
+	ast := &FieldQuery{
 		Field: "invalid_field",
-		Value: &parser.TermValue{Term: "test"},
+		Value: "test",
 	}
 
 	output, err := translator.Translate(ast, testSchema)
@@ -181,32 +180,54 @@ func TestPostgresTranslator_FieldNotInSchema(t *testing.T) {
 	assert.Contains(t, err.Error(), "not found")
 }
 
+func TestPostgresTranslator_FieldNotSearchable(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	// Note: The current schema design doesn't have a Searchable field
+	// All fields in the schema are searchable by default
+	// This test is kept for backwards compatibility but should pass now
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"internal_id": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
+
+	ast := &FieldQuery{
+		Field: "internal_id",
+		Value: "test",
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	// Since all fields are searchable now, this should succeed
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "internal_id = $1", output.WhereClause)
+}
+
 func TestPostgresTranslator_ComplexNestedQuery(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"product_code": {Type: schema.TypeText, Column: "product_code"},
-		"region":       {Type: schema.TypeText, Column: "region"},
-		"status":       {Type: schema.TypeText, Column: "status"},
+		"product_code": {Type: schema.TypeText},
+		"region":       {Type: schema.TypeText},
+		"status":       {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
 	// (productCode:13w42 AND region:ca) OR status:active
-	ast := &parser.BinaryOp{
+	ast := &BinaryOp{
 		Op: "OR",
-		Left: &parser.BinaryOp{
+		Left: &BinaryOp{
 			Op: "AND",
-			Left: &parser.FieldQuery{
+			Left: &FieldQuery{
 				Field: "product_code",
-				Value: &parser.TermValue{Term: "13w42"},
+				Value: "13w42",
 			},
-			Right: &parser.FieldQuery{
+			Right: &FieldQuery{
 				Field: "region",
-				Value: &parser.TermValue{Term: "ca"},
+				Value: "ca",
 			},
 		},
-		Right: &parser.FieldQuery{
+		Right: &FieldQuery{
 			Field: "status",
-			Value: &parser.TermValue{Term: "active"},
+			Value: "active",
 		},
 	}
 
@@ -224,28 +245,28 @@ func TestPostgresTranslator_ParameterNumbering(t *testing.T) {
 	translator := NewPostgresTranslator()
 
 	testSchema := schema.NewSchema("products", map[string]schema.Field{
-		"a": {Type: schema.TypeText, Column: "a"},
-		"b": {Type: schema.TypeText, Column: "b"},
-		"c": {Type: schema.TypeText, Column: "c"},
+		"a": {Type: schema.TypeText},
+		"b": {Type: schema.TypeText},
+		"c": {Type: schema.TypeText},
 	}, schema.SchemaOptions{})
 
 	// a:1 AND b:2 AND c:3
-	ast := &parser.BinaryOp{
+	ast := &BinaryOp{
 		Op: "AND",
-		Left: &parser.BinaryOp{
+		Left: &BinaryOp{
 			Op: "AND",
-			Left: &parser.FieldQuery{
+			Left: &FieldQuery{
 				Field: "a",
-				Value: &parser.TermValue{Term: "1"},
+				Value: "1",
 			},
-			Right: &parser.FieldQuery{
+			Right: &FieldQuery{
 				Field: "b",
-				Value: &parser.TermValue{Term: "2"},
+				Value: "2",
 			},
 		},
-		Right: &parser.FieldQuery{
+		Right: &FieldQuery{
 			Field: "c",
-			Value: &parser.TermValue{Term: "3"},
+			Value: "3",
 		},
 	}
 
@@ -257,4 +278,208 @@ func TestPostgresTranslator_ParameterNumbering(t *testing.T) {
 	assert.Equal(t, "1", output.Parameters[0])
 	assert.Equal(t, "2", output.Parameters[1])
 	assert.Equal(t, "3", output.Parameters[2])
+}
+
+func TestPostgresTranslator_FuzzyQuery_AutoDistance(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		EnabledFeatures: schema.EnabledFeatures{
+			Fuzzy: true,
+		},
+	})
+
+	// name:widget~ (auto distance of 2)
+	ast := &FuzzyQuery{
+		Field:    "name",
+		Term:     "widget",
+		Distance: 2,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "sql", output.Type)
+	assert.Equal(t, "levenshtein(name, $1) <= $2", output.WhereClause)
+	assert.Len(t, output.Parameters, 2)
+	assert.Equal(t, "widget", output.Parameters[0])
+	assert.Equal(t, 2, output.Parameters[1])
+	assert.Equal(t, []string{"text", "integer"}, output.ParameterTypes)
+}
+
+func TestPostgresTranslator_FuzzyQuery_CustomDistance(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"description": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		EnabledFeatures: schema.EnabledFeatures{
+			Fuzzy: true,
+		},
+	})
+
+	// description:fuzzy~1 (custom distance of 1)
+	ast := &FuzzyQuery{
+		Field:    "description",
+		Term:     "fuzzy",
+		Distance: 1,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "levenshtein(description, $1) <= $2", output.WhereClause)
+	assert.Equal(t, "fuzzy", output.Parameters[0])
+	assert.Equal(t, 1, output.Parameters[1])
+}
+
+func TestPostgresTranslator_FuzzyQuery_FeatureDisabled(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		EnabledFeatures: schema.EnabledFeatures{
+			Fuzzy: false, // Fuzzy search disabled
+		},
+	})
+
+	ast := &FuzzyQuery{
+		Field:    "name",
+		Term:     "widget",
+		Distance: 2,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	assert.Error(t, err)
+	assert.Nil(t, output)
+	assert.Contains(t, err.Error(), "fuzzy search requires pg_trgm extension")
+	assert.Contains(t, err.Error(), "use wildcards instead")
+}
+
+func TestPostgresTranslator_FuzzyQuery_InvalidField(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		EnabledFeatures: schema.EnabledFeatures{
+			Fuzzy: true,
+		},
+	})
+
+	ast := &FuzzyQuery{
+		Field:    "nonexistent",
+		Term:     "widget",
+		Distance: 2,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	assert.Error(t, err)
+	assert.Nil(t, output)
+	assert.Contains(t, err.Error(), "not found")
+}
+
+func TestPostgresTranslator_FuzzyQuery_WithSnakeCase(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"productName": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		NamingConvention: "snake_case",
+		EnabledFeatures: schema.EnabledFeatures{
+			Fuzzy: true,
+		},
+	})
+
+	ast := &FuzzyQuery{
+		Field:    "productName",
+		Term:     "widget",
+		Distance: 2,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	// Should use snake_case column name
+	assert.Equal(t, "levenshtein(product_name, $1) <= $2", output.WhereClause)
+	assert.Equal(t, "widget", output.Parameters[0])
+	assert.Equal(t, 2, output.Parameters[1])
+}
+
+func TestPostgresTranslator_FuzzyQuery_CombinedWithOtherQueries(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name":   {Type: schema.TypeText},
+		"region": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		EnabledFeatures: schema.EnabledFeatures{
+			Fuzzy: true,
+		},
+	})
+
+	// name:widget~ AND region:ca
+	ast := &BinaryOp{
+		Op: "AND",
+		Left: &FuzzyQuery{
+			Field:    "name",
+			Term:     "widget",
+			Distance: 2,
+		},
+		Right: &FieldQuery{
+			Field: "region",
+			Value: "ca",
+		},
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "levenshtein(name, $1) <= $2 AND region = $3", output.WhereClause)
+	assert.Len(t, output.Parameters, 3)
+	assert.Equal(t, "widget", output.Parameters[0])
+	assert.Equal(t, 2, output.Parameters[1])
+	assert.Equal(t, "ca", output.Parameters[2])
+	assert.Equal(t, []string{"text", "integer", "text"}, output.ParameterTypes)
+}
+
+func TestPostgresTranslator_FuzzyQuery_MultipleFuzzyQueries(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name":        {Type: schema.TypeText},
+		"description": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		EnabledFeatures: schema.EnabledFeatures{
+			Fuzzy: true,
+		},
+	})
+
+	// name:widget~1 OR description:gadget~2
+	ast := &BinaryOp{
+		Op: "OR",
+		Left: &FuzzyQuery{
+			Field:    "name",
+			Term:     "widget",
+			Distance: 1,
+		},
+		Right: &FuzzyQuery{
+			Field:    "description",
+			Term:     "gadget",
+			Distance: 2,
+		},
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "levenshtein(name, $1) <= $2 OR levenshtein(description, $3) <= $4", output.WhereClause)
+	assert.Len(t, output.Parameters, 4)
+	assert.Equal(t, "widget", output.Parameters[0])
+	assert.Equal(t, 1, output.Parameters[1])
+	assert.Equal(t, "gadget", output.Parameters[2])
+	assert.Equal(t, 2, output.Parameters[3])
 }

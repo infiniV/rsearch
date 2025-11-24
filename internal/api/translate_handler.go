@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/infiniv/rsearch/internal/translator"
 )
@@ -29,7 +30,7 @@ type TranslateResponse struct {
 type TranslateHandler struct {
 	schemaRegistry     *schema.Registry
 	translatorRegistry *translator.Registry
-	parseQuery         func(string) (translator.Node, error)
+	parseQuery         func(string) (parser.Node, error)
 }
 
 // NewTranslateHandler creates a new translate handler.

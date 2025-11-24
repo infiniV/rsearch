@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/infiniv/rsearch/internal/translator"
 	"github.com/stretchr/testify/assert"
@@ -20,12 +19,9 @@ func TestTranslateHandler_ParserNotImplemented(t *testing.T) {
 	translatorRegistry := translator.NewRegistry()
 
 	// Register test schema
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]schema.Field{
-			"product_code": {Type: schema.TypeText, Column: "product_code", Indexed: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
 	schemaRegistry.Register(testSchema)
 
 	// Register postgres translator
@@ -101,12 +97,9 @@ func TestTranslateHandler_DatabaseNotSupported(t *testing.T) {
 	translatorRegistry := translator.NewRegistry()
 
 	// Register test schema
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]schema.Field{
-			"product_code": {Type: schema.TypeText, Column: "product_code", Indexed: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
 	schemaRegistry.Register(testSchema)
 
 	handler := NewTranslateHandler(schemaRegistry, translatorRegistry)
@@ -136,13 +129,10 @@ func TestTranslateHandler_WithStubAST(t *testing.T) {
 	translatorRegistry := translator.NewRegistry()
 
 	// Register test schema
-	testSchema := &schema.Schema{
-		Name: "products",
-		Fields: map[string]schema.Field{
-			"product_code": {Type: schema.TypeText, Column: "product_code", Indexed: true},
-			"region":       {Type: schema.TypeText, Column: "region", Indexed: true},
-		},
-	}
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"product_code": {Type: schema.TypeText},
+		"region":       {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
 	schemaRegistry.Register(testSchema)
 
 	// Register postgres translator
@@ -152,18 +142,18 @@ func TestTranslateHandler_WithStubAST(t *testing.T) {
 	handler := &TranslateHandler{
 		schemaRegistry:     schemaRegistry,
 		translatorRegistry: translatorRegistry,
-		parseQuery: func(query string) (parser.Node, error) {
+		parseQuery: func(query string) (translator.Node, error) {
 			// Stub parser for testing
 			// Parse: productCode:13w42 AND region:ca
-			return &parser.BinaryOp{
+			return &translator.BinaryOp{
 				Op: "AND",
-				Left: &parser.FieldQuery{
+				Left: &translator.FieldQuery{
 					Field: "product_code",
-					Value: &parser.TermValue{Term: "13w42", Pos: parser.Position{}},
+					Value: "13w42",
 				},
-				Right: &parser.FieldQuery{
+				Right: &translator.FieldQuery{
 					Field: "region",
-					Value: &parser.TermValue{Term: "ca", Pos: parser.Position{}},
+					Value: "ca",
 				},
 			}, nil
 		},

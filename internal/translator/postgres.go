@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 )
 
@@ -26,7 +25,7 @@ func (p *PostgresTranslator) DatabaseType() string {
 }
 
 // Translate converts an AST node to a PostgreSQL query.
-func (p *PostgresTranslator) Translate(ast parser.Node, schema *schema.Schema) (*TranslatorOutput, error) {
+func (p *PostgresTranslator) Translate(ast Node, schema *schema.Schema) (*TranslatorOutput, error) {
 	// Reset state for new translation
 	p.paramCount = 0
 	p.params = make([]interface{}, 0)
@@ -41,47 +40,43 @@ func (p *PostgresTranslator) Translate(ast parser.Node, schema *schema.Schema) (
 }
 
 // translateNode recursively translates AST nodes.
-func (p *PostgresTranslator) translateNode(node parser.Node, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateNode(node Node, schema *schema.Schema) (string, error) {
 	switch n := node.(type) {
-	case *parser.FieldQuery:
+	case *FieldQuery:
 		return p.translateFieldQuery(n, schema)
-	case *parser.BinaryOp:
+	case *BinaryOp:
 		return p.translateBinaryOp(n, schema)
-	case *parser.RangeQuery:
+	case *RangeQuery:
 		return p.translateRangeQuery(n, schema)
-	case *parser.UnaryOp:
-		return p.translateUnaryOp(n, schema)
-	case *parser.RequiredQuery:
-		return p.translateRequiredQuery(n, schema)
-	case *parser.ProhibitedQuery:
-		return p.translateProhibitedQuery(n, schema)
+	case *FuzzyQuery:
+		return p.translateFuzzyQuery(n, schema)
 	default:
 		return "", fmt.Errorf("unsupported node type: %s", node.Type())
 	}
 }
 
 // translateFieldQuery translates a simple field:value query.
-func (p *PostgresTranslator) translateFieldQuery(fq *parser.FieldQuery, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateFieldQuery(fq *FieldQuery, schema *schema.Schema) (string, error) {
 	// Validate field exists in schema
 	columnName, field, err := schema.ResolveField(fq.Field)
 	if err != nil {
 		return "", fmt.Errorf("field %s not found in schema %s", fq.Field, schema.Name)
 	}
 
-	// Extract value from ValueNode
-	value := fq.Value.Value()
+	// Note: Searchable field removed as it's not in the current schema design
+	_ = field // Use field if needed later
 
 	// Add parameter
 	p.paramCount++
-	p.params = append(p.params, value)
-	p.paramTypes = append(p.paramTypes, string(field.Type))
+	p.params = append(p.params, fq.Value)
+	p.paramTypes = append(p.paramTypes, string(string(field.Type)))
 
 	// Generate SQL with parameterized query (use resolved column name)
 	return fmt.Sprintf("%s = $%d", columnName, p.paramCount), nil
 }
 
 // translateBinaryOp translates AND/OR operations.
-func (p *PostgresTranslator) translateBinaryOp(bo *parser.BinaryOp, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateBinaryOp(bo *BinaryOp, schema *schema.Schema) (string, error) {
 	left, err := p.translateNode(bo.Left, schema)
 	if err != nil {
 		return "", err
@@ -108,64 +103,32 @@ func (p *PostgresTranslator) translateBinaryOp(bo *parser.BinaryOp, schema *sche
 }
 
 // needsParentheses determines if a node needs parentheses.
-func (p *PostgresTranslator) needsParentheses(node parser.Node) bool {
+func (p *PostgresTranslator) needsParentheses(node Node) bool {
 	// Binary operations need parentheses when nested
-	_, isBinaryOp := node.(*parser.BinaryOp)
+	_, isBinaryOp := node.(*BinaryOp)
 	return isBinaryOp
 }
 
 // translateRangeQuery translates range queries like field:[start TO end].
-func (p *PostgresTranslator) translateRangeQuery(rq *parser.RangeQuery, schema *schema.Schema) (string, error) {
+func (p *PostgresTranslator) translateRangeQuery(rq *RangeQuery, schema *schema.Schema) (string, error) {
 	// Validate field exists in schema
 	columnName, field, err := schema.ResolveField(rq.Field)
 	if err != nil {
 		return "", fmt.Errorf("field %s not found in schema %s", rq.Field, schema.Name)
 	}
 
-	// Extract values from ValueNodes
-	startValue := rq.Start.Value()
-	endValue := rq.End.Value()
+	// Note: Searchable field removed as it's not in the current schema design
+	_ = field // Use field if needed later
 
-	// Handle wildcard bounds (unbounded ranges)
-	startIsWildcard := startValue == "*"
-	endIsWildcard := endValue == "*"
-
-	// Handle single-sided unbounded ranges
-	if startIsWildcard && !endIsWildcard {
-		// Only upper bound: field < or <= value
-		p.paramCount++
-		p.params = append(p.params, endValue)
-		p.paramTypes = append(p.paramTypes, string(field.Type))
-
-		op := "<"
-		if rq.InclusiveEnd {
-			op = "<="
-		}
-		return fmt.Sprintf("%s %s $%d", columnName, op, p.paramCount), nil
-	}
-
-	if !startIsWildcard && endIsWildcard {
-		// Only lower bound: field > or >= value
-		p.paramCount++
-		p.params = append(p.params, startValue)
-		p.paramTypes = append(p.paramTypes, string(field.Type))
-
-		op := ">"
-		if rq.InclusiveStart {
-			op = ">="
-		}
-		return fmt.Sprintf("%s %s $%d", columnName, op, p.paramCount), nil
-	}
-
-	// Both bounds specified
+	// Handle inclusive vs exclusive ranges
 	if rq.InclusiveStart && rq.InclusiveEnd {
 		// Both inclusive: BETWEEN
 		p.paramCount++
-		p.params = append(p.params, startValue)
+		p.params = append(p.params, rq.Start)
 		p.paramTypes = append(p.paramTypes, string(field.Type))
 
 		p.paramCount++
-		p.params = append(p.params, endValue)
+		p.params = append(p.params, rq.End)
 		p.paramTypes = append(p.paramTypes, string(field.Type))
 
 		return fmt.Sprintf("%s BETWEEN $%d AND $%d", columnName, p.paramCount-1, p.paramCount), nil
@@ -176,7 +139,7 @@ func (p *PostgresTranslator) translateRangeQuery(rq *parser.RangeQuery, schema *
 
 	// Start condition
 	p.paramCount++
-	p.params = append(p.params, startValue)
+	p.params = append(p.params, rq.Start)
 	p.paramTypes = append(p.paramTypes, string(field.Type))
 
 	if rq.InclusiveStart {
@@ -187,7 +150,7 @@ func (p *PostgresTranslator) translateRangeQuery(rq *parser.RangeQuery, schema *
 
 	// End condition
 	p.paramCount++
-	p.params = append(p.params, endValue)
+	p.params = append(p.params, rq.End)
 	p.paramTypes = append(p.paramTypes, string(field.Type))
 
 	if rq.InclusiveEnd {
@@ -199,39 +162,32 @@ func (p *PostgresTranslator) translateRangeQuery(rq *parser.RangeQuery, schema *
 	return strings.Join(clauses, " AND "), nil
 }
 
-// translateUnaryOp translates unary operations (NOT, +, -)
-func (p *PostgresTranslator) translateUnaryOp(uo *parser.UnaryOp, schema *schema.Schema) (string, error) {
-	operand, err := p.translateNode(uo.Operand, schema)
+// translateFuzzyQuery translates fuzzy search queries like field:term~ or field:term~1.
+func (p *PostgresTranslator) translateFuzzyQuery(fq *FuzzyQuery, schema *schema.Schema) (string, error) {
+	// Check if fuzzy search is enabled in schema options
+	if !schema.Options.EnabledFeatures.Fuzzy {
+		return "", fmt.Errorf("fuzzy search requires pg_trgm extension. Enable in schema or use wildcards instead: %s:*", fq.Field)
+	}
+
+	// Validate field exists in schema
+	columnName, field, err := schema.ResolveField(fq.Field)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("field %s not found in schema %s", fq.Field, schema.Name)
 	}
 
-	switch uo.Op {
-	case "NOT", "!":
-		return fmt.Sprintf("NOT %s", operand), nil
-	case "+":
-		// Required term - just return the operand
-		return operand, nil
-	case "-":
-		// Prohibited term - negate it
-		return fmt.Sprintf("NOT %s", operand), nil
-	default:
-		return "", fmt.Errorf("unsupported unary operator: %s", uo.Op)
-	}
-}
+	_ = field // Use field if needed later
 
-// translateRequiredQuery translates required queries (+term)
-func (p *PostgresTranslator) translateRequiredQuery(rq *parser.RequiredQuery, schema *schema.Schema) (string, error) {
-	// Required query is just the query itself in SQL
-	return p.translateNode(rq.Query, schema)
-}
+	// Use levenshtein distance for fuzzy matching
+	// Format: levenshtein(field, $1) <= $2
+	p.paramCount++
+	p.params = append(p.params, fq.Term)
+	p.paramTypes = append(p.paramTypes, string(field.Type))
+	termParam := p.paramCount
 
-// translateProhibitedQuery translates prohibited queries (-term)
-func (p *PostgresTranslator) translateProhibitedQuery(pq *parser.ProhibitedQuery, schema *schema.Schema) (string, error) {
-	// Prohibited query is NOT query in SQL
-	query, err := p.translateNode(pq.Query, schema)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("NOT %s", query), nil
+	p.paramCount++
+	p.params = append(p.params, fq.Distance)
+	p.paramTypes = append(p.paramTypes, "integer")
+	distanceParam := p.paramCount
+
+	return fmt.Sprintf("levenshtein(%s, $%d) <= $%d", columnName, termParam, distanceParam), nil
 }
