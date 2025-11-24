@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/infiniv/rsearch/internal/parser"
+        "github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 )
 
@@ -13,6 +13,7 @@ type PostgresTranslator struct {
 	paramCount int
 	params     []interface{}
 	paramTypes []string
+	metadata   map[string]interface{}
 }
 
 // NewPostgresTranslator creates a new PostgreSQL translator.
@@ -31,13 +32,16 @@ func (p *PostgresTranslator) Translate(ast parser.Node, schema *schema.Schema) (
 	p.paramCount = 0
 	p.params = make([]interface{}, 0)
 	p.paramTypes = make([]string, 0)
+	p.metadata = make(map[string]interface{})
 
 	whereClause, err := p.translateNode(ast, schema)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewSQLOutput(whereClause, p.params, p.paramTypes), nil
+	output := NewSQLOutput(whereClause, p.params, p.paramTypes)
+	output.Metadata = p.metadata
+	return output, nil
 }
 
 // translateNode recursively translates AST nodes.
@@ -49,8 +53,8 @@ func (p *PostgresTranslator) translateNode(node parser.Node, schema *schema.Sche
 		return p.translateBinaryOp(n, schema)
 	case *parser.RangeQuery:
 		return p.translateRangeQuery(n, schema)
-	case *parser.FuzzyQuery:
-		return p.translateFuzzyQuery(n, schema)
+	case *parser.BoostQuery:
+		return p.translateBoostQuery(n, schema)
 	default:
 		return "", fmt.Errorf("unsupported node type: %s", node.Type())
 	}
@@ -163,32 +167,30 @@ func (p *PostgresTranslator) translateRangeQuery(rq *parser.RangeQuery, schema *
 	return strings.Join(clauses, " AND "), nil
 }
 
-// translateFuzzyQuery translates fuzzy search queries like field:term~ or field:term~1.
-func (p *PostgresTranslator) translateFuzzyQuery(fq *parser.FuzzyQuery, schema *schema.Schema) (string, error) {
-	// Check if fuzzy search is enabled in schema options
-	if !schema.Options.EnabledFeatures.Fuzzy {
-		return "", fmt.Errorf("fuzzy search requires pg_trgm extension. Enable in schema or use wildcards instead: %s:*", fq.Field)
-	}
-
-	// Validate field exists in schema
-	columnName, field, err := schema.ResolveField(fq.Field)
+// translateBoostQuery translates boosted queries.
+// PostgreSQL doesn't natively support relevance scoring like search engines,
+// so we translate the inner query normally and store the boost value in metadata
+// for application-level use.
+func (p *PostgresTranslator) translateBoostQuery(bq *parser.BoostQuery, schema *schema.Schema) (string, error) {
+	// Translate the inner query
+	innerSQL, err := p.translateNode(bq.Query, schema)
 	if err != nil {
-		return "", fmt.Errorf("field %s not found in schema %s", fq.Field, schema.Name)
+		return "", err
 	}
 
-	_ = field // Use field if needed later
+	// Store boost information in metadata
+	if p.metadata["boosts"] == nil {
+		p.metadata["boosts"] = make([]map[string]interface{}, 0)
+	}
 
-	// Use levenshtein distance for fuzzy matching
-	// Format: levenshtein(field, $1) <= $2
-	p.paramCount++
-	p.params = append(p.params, fq.Term)
-	p.paramTypes = append(p.paramTypes, string(field.Type))
-	termParam := p.paramCount
+	boosts := p.metadata["boosts"].([]map[string]interface{})
+	boosts = append(boosts, map[string]interface{}{
+		"query": bq.Query.Type(),
+		"boost": bq.Boost,
+	})
+	p.metadata["boosts"] = boosts
 
-	p.paramCount++
-	p.params = append(p.params, fq.Distance)
-	p.paramTypes = append(p.paramTypes, "integer")
-	distanceParam := p.paramCount
-
-	return fmt.Sprintf("levenshtein(%s, $%d) <= $%d", columnName, termParam, distanceParam), nil
+	// Return the inner SQL without modification
+	// SQL databases don't have native relevance scoring
+	return innerSQL, nil
 }
