@@ -66,13 +66,13 @@ func (p *PostgresTranslator) translateFieldQuery(fq *parser.FieldQuery, schema *
 		return "", fmt.Errorf("field %s not found in schema %s", fq.Field, schema.Name)
 	}
 
-	// Note: Searchable field removed as it's not in the current schema design
-	_ = field // Use field if needed later
+	// Extract value from ValueNode
+	value := fq.Value.Value()
 
 	// Add parameter
 	p.paramCount++
-	p.params = append(p.params, fq.Value)
-	p.paramTypes = append(p.paramTypes, string(string(field.Type)))
+	p.params = append(p.params, value)
+	p.paramTypes = append(p.paramTypes, string(field.Type))
 
 	// Generate SQL with parameterized query (use resolved column name)
 	return fmt.Sprintf("%s = $%d", columnName, p.paramCount), nil

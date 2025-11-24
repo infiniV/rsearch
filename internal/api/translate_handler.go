@@ -38,7 +38,10 @@ func NewTranslateHandler(schemaRegistry *schema.Registry, translatorRegistry *tr
 	return &TranslateHandler{
 		schemaRegistry:     schemaRegistry,
 		translatorRegistry: translatorRegistry,
-		parseQuery:         nil, // Parser not implemented yet
+		parseQuery: func(query string) (parser.Node, error) {
+			p := parser.NewParser(query)
+			return p.Parse()
+		},
 	}
 }
 
@@ -85,12 +88,7 @@ func (h *TranslateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse query (not implemented yet)
-	if h.parseQuery == nil {
-		h.sendError(w, http.StatusNotImplemented, "Parser not implemented yet")
-		return
-	}
-
+	// Parse query
 	ast, err := h.parseQuery(req.Query)
 	if err != nil {
 		h.sendError(w, http.StatusBadRequest, fmt.Sprintf("Failed to parse query: %s", err.Error()))
