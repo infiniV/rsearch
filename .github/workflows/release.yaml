@@ -177,29 +177,30 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Create release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create ${{ steps.version.outputs.VERSION }} \
-            --title "Release ${{ steps.version.outputs.VERSION }}" \
-            --notes "# rsearch ${{ steps.version.outputs.VERSION }}
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "release-assets/*"
+          name: "Release ${{ steps.version.outputs.VERSION }}"
+          body: |
+            # rsearch ${{ steps.version.outputs.VERSION }}
 
-          ${{ steps.changelog.outputs.CHANGELOG }}
+            ${{ steps.changelog.outputs.CHANGELOG }}
 
-          ## Installation
+            ## Installation
 
-          ### Docker
-          \`\`\`bash
-          docker pull ghcr.io/infiniv/rsearch:${{ steps.version.outputs.VERSION }}
-          \`\`\`
+            ### Docker
+            ```bash
+            docker pull ghcr.io/infiniv/rsearch:${{ steps.version.outputs.VERSION }}
+            ```
 
-          ### Binary
-          Download the appropriate binary for your platform from the assets below.
+            ### Binary
+            Download the appropriate binary for your platform from the assets below.
 
-          ## Docker Image
-          - ghcr.io/infiniv/rsearch:${{ steps.version.outputs.VERSION }}
-          - ghcr.io/infiniv/rsearch:latest" \
-            release-assets/*
+            ## Docker Image
+            - ghcr.io/infiniv/rsearch:${{ steps.version.outputs.VERSION }}
+            - ghcr.io/infiniv/rsearch:latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+          makeLatest: true
 
   verify-release:
     name: Verify Release
