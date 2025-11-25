@@ -300,10 +300,10 @@ No conflicts (separate files)
 - [x] Performance optimization (50+ benchmarks across parser/translator/schema)
 - [x] Metrics (11 new Prometheus metrics, system collector, 93.9% coverage)
 
-### Phase 6: Additional Databases
-- [ ] MySQL translator
-- [ ] SQLite translator
-- [ ] MongoDB translator
+### Phase 6: Additional Databases ✅ COMPLETE
+- [x] MySQL translator (? placeholders, REGEXP, SOUNDEX fuzzy, MATCH AGAINST)
+- [x] SQLite translator (? placeholders, REGEXP, FTS5 proximity, json_extract)
+- [x] MongoDB translator ($and/$or/$nor, $regex, $text, $exists, map[string]interface{})
 
 ### Phase 7: Release
 - [ ] Docker images
