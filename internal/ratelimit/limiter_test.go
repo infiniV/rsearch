@@ -165,10 +165,7 @@ func TestRateLimiter_Cleanup(t *testing.T) {
 	// Use a shorter cleanup interval for testing
 	requestsPerMinute := 60
 	burst := 5
-	limiter := NewRateLimiter(requestsPerMinute, burst)
-	// Override cleanup interval to 100ms for faster testing
-	limiter.cleanupInterval = 100 * time.Millisecond
-	limiter.staleThreshold = 200 * time.Millisecond
+	limiter := NewRateLimiterWithCleanup(requestsPerMinute, burst, 100*time.Millisecond, 200*time.Millisecond)
 	defer limiter.Stop()
 
 	ip := "192.168.1.100"

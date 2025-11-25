@@ -28,12 +28,17 @@ type RateLimiter struct {
 
 // NewRateLimiter creates a new rate limiter with specified requests per minute and burst size
 func NewRateLimiter(requestsPerMinute int, burst int) *RateLimiter {
+	return NewRateLimiterWithCleanup(requestsPerMinute, burst, 10*time.Minute, 1*time.Hour)
+}
+
+// NewRateLimiterWithCleanup creates a rate limiter with custom cleanup settings
+func NewRateLimiterWithCleanup(requestsPerMinute int, burst int, cleanupInterval, staleThreshold time.Duration) *RateLimiter {
 	rl := &RateLimiter{
 		requestsPerMinute: float64(requestsPerMinute),
 		burst:             float64(burst),
 		tokensPerSecond:   float64(requestsPerMinute) / 60.0,
-		cleanupInterval:   10 * time.Minute,
-		staleThreshold:    1 * time.Hour,
+		cleanupInterval:   cleanupInterval,
+		staleThreshold:    staleThreshold,
 		stopCleanup:       make(chan struct{}),
 	}
 
