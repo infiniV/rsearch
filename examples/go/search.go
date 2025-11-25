@@ -1,3 +1,5 @@
+//go:build ignore
+
 // rsearch Integration Example - Go
 // Demonstrates how to use rsearch with PostgreSQL in a Go application
 
