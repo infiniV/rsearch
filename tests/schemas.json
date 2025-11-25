@@ -32,5 +32,23 @@
     "options": {
       "namingConvention": "snake_case"
     }
+  },
+  "articles": {
+    "name": "articles",
+    "fields": {
+      "title": {"type": "text"},
+      "content": {"type": "text"},
+      "author": {"type": "text"},
+      "category": {"type": "text"}
+    },
+    "options": {
+      "namingConvention": "snake_case",
+      "defaultField": "content",
+      "enabledFeatures": {
+        "fuzzy": true,
+        "proximity": true,
+        "regex": true
+      }
+    }
   }
 }

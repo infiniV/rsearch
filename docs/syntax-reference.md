@@ -11,7 +11,9 @@ This reference documents all supported query syntax patterns in rsearch, with ex
 - [Complex Queries](#complex-queries)
 - [Exists Queries](#exists-queries)
 - [Field Queries](#field-queries)
+- [Fuzzy Search](#fuzzy-search)
 - [Grouping](#grouping)
+- [Proximity Search](#proximity-search)
 - [Range Queries](#range-queries)
 - [Regex](#regex)
 - [Wildcards](#wildcards)
@@ -157,6 +159,66 @@ region = $1 OR region = $2
 [
   "ca",
   "ny"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text",
+  "text"
+]
+```
+
+---
+
+### Required operator (+)
+
+**Query:**
+```
++name:widget AND region:ca
+```
+
+**PostgreSQL Translation:**
+```sql
+name = $1 AND region = $2
+```
+
+**Parameters:**
+```json
+[
+  "widget",
+  "ca"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text",
+  "text"
+]
+```
+
+---
+
+### Prohibited operator (-)
+
+**Query:**
+```
+region:ca AND -status:discontinued
+```
+
+**PostgreSQL Translation:**
+```sql
+region = $1 AND NOT status = $2
+```
+
+**Parameters:**
+```json
+[
+  "ca",
+  "discontinued"
 ]
 ```
 
@@ -400,6 +462,66 @@ rod_length = $1
 
 ---
 
+### Phrase match with quotes
+
+**Query:**
+```
+name:"Widget Pro"
+```
+
+**PostgreSQL Translation:**
+```sql
+name = $1
+```
+
+**Parameters:**
+```json
+[
+  "Widget Pro"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text"
+]
+```
+
+---
+
+## Fuzzy Search
+
+### Fuzzy match with edit distance
+
+**Query:**
+```
+title:widget~2
+```
+
+**PostgreSQL Translation:**
+```sql
+levenshtein(title, $1) <= $2
+```
+
+**Parameters:**
+```json
+[
+  "widget",
+  2
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text",
+  "integer"
+]
+```
+
+---
+
 ## Grouping
 
 ### Parenthesized OR with AND
@@ -465,6 +587,68 @@ rod_length = $1
   "integer",
   "text",
   "integer"
+]
+```
+
+---
+
+### Field group with multiple values
+
+**Query:**
+```
+region:(ca OR ny OR tx)
+```
+
+**PostgreSQL Translation:**
+```sql
+(region = $1 OR region = $2 OR region = $3)
+```
+
+**Parameters:**
+```json
+[
+  "ca",
+  "ny",
+  "tx"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text",
+  "text",
+  "text"
+]
+```
+
+---
+
+## Proximity Search
+
+### Proximity search within distance
+
+**Query:**
+```
+content:"quick brown fox"~5
+```
+
+**PostgreSQL Translation:**
+```sql
+to_tsvector('english', content) @@ phraseto_tsquery('english', $1)
+```
+
+**Parameters:**
+```json
+[
+  "quick brown fox"
+]
+```
+
+**Parameter Types:**
+```json
+[
+  "text"
 ]
 ```
 

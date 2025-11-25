@@ -287,5 +287,71 @@
       "parameters": ["13w%", "10", "500"],
       "parameterTypes": ["text", "float", "float"]
     }
+  },
+  {
+    "category": "Field Queries",
+    "description": "Phrase match with quotes",
+    "query": "name:\"Widget Pro\"",
+    "schema": "products",
+    "expected": {
+      "sql": "name = $1",
+      "parameters": ["Widget Pro"],
+      "parameterTypes": ["text"]
+    }
+  },
+  {
+    "category": "Boolean Operators",
+    "description": "Required operator (+)",
+    "query": "+name:widget AND region:ca",
+    "schema": "products",
+    "expected": {
+      "sql": "name = $1 AND region = $2",
+      "parameters": ["widget", "ca"],
+      "parameterTypes": ["text", "text"]
+    }
+  },
+  {
+    "category": "Boolean Operators",
+    "description": "Prohibited operator (-)",
+    "query": "region:ca AND -status:discontinued",
+    "schema": "products",
+    "expected": {
+      "sql": "region = $1 AND NOT status = $2",
+      "parameters": ["ca", "discontinued"],
+      "parameterTypes": ["text", "text"]
+    }
+  },
+  {
+    "category": "Fuzzy Search",
+    "description": "Fuzzy match with edit distance",
+    "query": "title:widget~2",
+    "schema": "articles",
+    "expected": {
+      "sql": "levenshtein(title, $1) <= $2",
+      "parameters": ["widget", 2],
+      "parameterTypes": ["text", "integer"]
+    }
+  },
+  {
+    "category": "Proximity Search",
+    "description": "Proximity search within distance",
+    "query": "content:\"quick brown fox\"~5",
+    "schema": "articles",
+    "expected": {
+      "sql": "to_tsvector('english', content) @@ phraseto_tsquery('english', $1)",
+      "parameters": ["quick brown fox"],
+      "parameterTypes": ["text"]
+    }
+  },
+  {
+    "category": "Grouping",
+    "description": "Field group with multiple values",
+    "query": "region:(ca OR ny OR tx)",
+    "schema": "products",
+    "expected": {
+      "sql": "(region = $1 OR region = $2 OR region = $3)",
+      "parameters": ["ca", "ny", "tx"],
+      "parameterTypes": ["text", "text", "text"]
+    }
   }
 ]
