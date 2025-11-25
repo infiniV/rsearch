@@ -63,3 +63,6 @@ package-lock.json
 *.jpg
 *.jpeg
 *.gif
+
+# Plans
+docs/plans/
