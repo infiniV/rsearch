@@ -12,6 +12,7 @@ import (
 	"github.com/infiniv/rsearch/internal/api"
 	"github.com/infiniv/rsearch/internal/config"
 	"github.com/infiniv/rsearch/internal/observability"
+	"github.com/infiniv/rsearch/internal/ratelimit"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/infiniv/rsearch/internal/translator"
 	"github.com/infiniv/rsearch/pkg/rsearch"
@@ -55,8 +56,16 @@ func main() {
 	translatorRegistry.Register("postgres", translator.NewPostgresTranslator())
 	logger.Info("Translator registry initialized with PostgreSQL support")
 
+	// Initialize rate limiter
+	rateLimiter := ratelimit.NewRateLimiter(cfg.Limits.RateLimit.RequestsPerMinute, cfg.Limits.RateLimit.Burst)
+	defer rateLimiter.Stop()
+	if cfg.Limits.RateLimit.Enabled {
+		logger.Infof("Rate limiting enabled: %d requests/min with burst of %d",
+			cfg.Limits.RateLimit.RequestsPerMinute, cfg.Limits.RateLimit.Burst)
+	}
+
 	// Setup routes
-	router := api.SetupRoutes(cfg, logger, metrics, schemaRegistry, translatorRegistry)
+	router := api.SetupRoutes(cfg, logger, metrics, schemaRegistry, translatorRegistry, rateLimiter)
 
 	// Create HTTP server
 	server := &http.Server{

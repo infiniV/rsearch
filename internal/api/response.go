@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/infiniv/rsearch/pkg/rsearch"
 )
@@ -58,4 +59,55 @@ func RespondBadRequest(w http.ResponseWriter, message string) {
 // RespondNotFound sends a 404 not found error
 func RespondNotFound(w http.ResponseWriter, message string) {
 	RespondError(w, http.StatusNotFound, rsearch.ErrorCodeSchemaNotFound, message)
+}
+
+// RespondRateLimited sends a 429 rate limited error
+func RespondRateLimited(w http.ResponseWriter, retryAfter int) {
+	if retryAfter > 0 {
+		w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+	}
+	RespondError(w, http.StatusTooManyRequests, rsearch.ErrorCodeRateLimited, "Rate limit exceeded")
+}
+
+// RespondUnauthorized sends a 401 unauthorized error
+func RespondUnauthorized(w http.ResponseWriter, message string) {
+	if message == "" {
+		message = "Unauthorized"
+	}
+	RespondError(w, http.StatusUnauthorized, rsearch.ErrorCodeUnauthorized, message)
+}
+
+// RespondForbidden sends a 403 forbidden error
+func RespondForbidden(w http.ResponseWriter, message string) {
+	if message == "" {
+		message = "Forbidden"
+	}
+	RespondError(w, http.StatusForbidden, rsearch.ErrorCodeForbidden, message)
+}
+
+// RespondTooManyRequests sends a 429 too many requests error with retry after header
+func RespondTooManyRequests(w http.ResponseWriter, message string, retryAfter int) {
+	if message == "" {
+		message = "Too many requests"
+	}
+	if retryAfter > 0 {
+		w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+	}
+	RespondError(w, http.StatusTooManyRequests, rsearch.ErrorCodeRateLimited, message)
+}
+
+// RespondServiceUnavailable sends a 503 service unavailable error
+func RespondServiceUnavailable(w http.ResponseWriter, message string) {
+	if message == "" {
+		message = "Service unavailable"
+	}
+	RespondError(w, http.StatusServiceUnavailable, rsearch.ErrorCodeServiceUnavailable, message)
+}
+
+// RespondTimeout sends a 504 gateway timeout error
+func RespondTimeout(w http.ResponseWriter, message string) {
+	if message == "" {
+		message = "Request timeout"
+	}
+	RespondError(w, http.StatusGatewayTimeout, rsearch.ErrorCodeTimeout, message)
 }

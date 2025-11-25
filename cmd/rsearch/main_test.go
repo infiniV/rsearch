@@ -11,6 +11,7 @@ import (
 	"github.com/infiniv/rsearch/internal/api"
 	"github.com/infiniv/rsearch/internal/config"
 	"github.com/infiniv/rsearch/internal/observability"
+	"github.com/infiniv/rsearch/internal/ratelimit"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/infiniv/rsearch/internal/translator"
 	"github.com/infiniv/rsearch/pkg/rsearch"
@@ -52,8 +53,10 @@ func TestServerIntegration(t *testing.T) {
 	schemaRegistry := schema.NewRegistry()
 	translatorRegistry := translator.NewRegistry()
 	translatorRegistry.Register("postgres", translator.NewPostgresTranslator())
+	rateLimiter := ratelimit.NewRateLimiter(100, 10)
+	defer rateLimiter.Stop()
 
-	router := api.SetupRoutes(cfg, logger, nil, schemaRegistry, translatorRegistry)
+	router := api.SetupRoutes(cfg, logger, nil, schemaRegistry, translatorRegistry, rateLimiter)
 
 	// Create server
 	server := &http.Server{

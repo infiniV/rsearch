@@ -4,12 +4,13 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/infiniv/rsearch/internal/config"
 	"github.com/infiniv/rsearch/internal/observability"
+	"github.com/infiniv/rsearch/internal/ratelimit"
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/infiniv/rsearch/internal/translator"
 )
 
 // SetupRoutes sets up all HTTP routes
-func SetupRoutes(cfg *config.Config, logger *observability.Logger, metrics *observability.Metrics, schemaRegistry *schema.Registry, translatorRegistry *translator.Registry) *chi.Mux {
+func SetupRoutes(cfg *config.Config, logger *observability.Logger, metrics *observability.Metrics, schemaRegistry *schema.Registry, translatorRegistry *translator.Registry, rateLimiter *ratelimit.RateLimiter) *chi.Mux {
 	r := chi.NewRouter()
 
 	// Create handlers
@@ -19,6 +20,7 @@ func SetupRoutes(cfg *config.Config, logger *observability.Logger, metrics *obse
 
 	// Global middleware
 	r.Use(RequestIDMiddleware(cfg))
+	r.Use(RateLimitMiddleware(rateLimiter, cfg))
 	r.Use(LoggingMiddleware(logger))
 	r.Use(RecoveryMiddleware(logger))
 	r.Use(CORSMiddleware(cfg))
