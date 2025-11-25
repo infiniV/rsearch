@@ -271,14 +271,14 @@ No conflicts (separate files)
 - [x] Schema system
 - [x] Translator interface
 
-### Phase 3: Query Syntax ⚠️ MOSTLY COMPLETE (6/8 features)
+### Phase 3: Query Syntax ✅ COMPLETE (8/8 features)
 - [x] Operators (AND, OR, NOT, +, -)
 - [x] Range queries (inclusive, exclusive, comparison)
 - [x] Wildcards & regex
 - [x] Fuzzy search (pg_trgm with feature flags)
-- [ ] Proximity search (AST structure conflicts - deferred)
+- [x] Proximity search (phraseto_tsquery for PostgreSQL, MATCH for MySQL/SQLite, $text for MongoDB)
 - [x] Boost queries (metadata for relevance)
-- [ ] Field grouping (merge conflicts - deferred)
+- [x] Field grouping (field:(a OR b) syntax, all translators)
 - [x] Exists queries (_exists_ keyword)
 
 ### Phase 4: Documentation & Testing ✅ COMPLETE

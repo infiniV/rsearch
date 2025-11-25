@@ -421,3 +421,298 @@ func TestPostgresTranslator_ComplexExistsQuery(t *testing.T) {
 	assert.Len(t, output.Parameters, 1)
 	assert.Equal(t, "100", output.Parameters[0])
 }
+
+// ProximityQuery Tests
+
+func TestPostgresTranslator_ProximityQuery(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"description": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		DefaultField: "description",
+		EnabledFeatures: schema.EnabledFeatures{
+			Proximity: true,
+		},
+	})
+
+	ast := &parser.ProximityQuery{
+		Field:    "description",
+		Phrase:   "quick brown fox",
+		Distance: 5,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "sql", output.Type)
+	assert.Contains(t, output.WhereClause, "to_tsvector")
+	assert.Contains(t, output.WhereClause, "phraseto_tsquery")
+	assert.Len(t, output.Parameters, 1)
+	assert.Equal(t, "quick brown fox", output.Parameters[0])
+}
+
+func TestPostgresTranslator_ProximityQuery_DefaultField(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"content": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		DefaultField: "content",
+		EnabledFeatures: schema.EnabledFeatures{
+			Proximity: true,
+		},
+	})
+
+	// Proximity without explicit field uses default
+	ast := &parser.ProximityQuery{
+		Field:    "",
+		Phrase:   "hello world",
+		Distance: 3,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Contains(t, output.WhereClause, "content")
+}
+
+func TestPostgresTranslator_ProximityQuery_NotEnabled(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"description": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		EnabledFeatures: schema.EnabledFeatures{
+			Proximity: false,
+		},
+	})
+
+	ast := &parser.ProximityQuery{
+		Field:    "description",
+		Phrase:   "quick fox",
+		Distance: 5,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	assert.Error(t, err)
+	assert.Nil(t, output)
+	assert.Contains(t, err.Error(), "full-text search")
+}
+
+func TestPostgresTranslator_ProximityQuery_SingleWord(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		EnabledFeatures: schema.EnabledFeatures{
+			Proximity: true,
+		},
+	})
+
+	// Single word falls back to simple match
+	ast := &parser.ProximityQuery{
+		Field:    "name",
+		Phrase:   "widget",
+		Distance: 3,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "name = $1", output.WhereClause)
+	assert.Equal(t, "widget", output.Parameters[0])
+}
+
+func TestPostgresTranslator_ProximityQuery_InvalidField(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name": {Type: schema.TypeText},
+	}, schema.SchemaOptions{
+		EnabledFeatures: schema.EnabledFeatures{
+			Proximity: true,
+		},
+	})
+
+	ast := &parser.ProximityQuery{
+		Field:    "invalid_field",
+		Phrase:   "test phrase",
+		Distance: 3,
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	assert.Error(t, err)
+	assert.Nil(t, output)
+	assert.Contains(t, err.Error(), "not found")
+}
+
+// FieldGroupQuery Tests
+
+func TestPostgresTranslator_FieldGroupQuery(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"status": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
+
+	// status:(active OR pending)
+	ast := &parser.FieldGroupQuery{
+		Field: "status",
+		Queries: []parser.Node{
+			&parser.TermQuery{Term: "active"},
+			&parser.TermQuery{Term: "pending"},
+		},
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "sql", output.Type)
+	assert.Equal(t, "(status = $1 OR status = $2)", output.WhereClause)
+	assert.Len(t, output.Parameters, 2)
+	assert.Equal(t, "active", output.Parameters[0])
+	assert.Equal(t, "pending", output.Parameters[1])
+}
+
+func TestPostgresTranslator_FieldGroupQuery_SingleValue(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"category": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
+
+	ast := &parser.FieldGroupQuery{
+		Field: "category",
+		Queries: []parser.Node{
+			&parser.TermQuery{Term: "electronics"},
+		},
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "category = $1", output.WhereClause)
+	assert.Equal(t, "electronics", output.Parameters[0])
+}
+
+func TestPostgresTranslator_FieldGroupQuery_WithWildcard(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
+
+	// name:(widget* OR gadget*)
+	ast := &parser.FieldGroupQuery{
+		Field: "name",
+		Queries: []parser.Node{
+			&parser.WildcardQuery{Pattern: "widget*"},
+			&parser.WildcardQuery{Pattern: "gadget*"},
+		},
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "(name LIKE $1 OR name LIKE $2)", output.WhereClause)
+	assert.Equal(t, "widget%", output.Parameters[0])
+	assert.Equal(t, "gadget%", output.Parameters[1])
+}
+
+func TestPostgresTranslator_FieldGroupQuery_WithBinaryOp(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"tags": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
+
+	// tags:(scala AND functional)
+	ast := &parser.FieldGroupQuery{
+		Field: "tags",
+		Queries: []parser.Node{
+			&parser.BinaryOp{
+				Op:    "AND",
+				Left:  &parser.TermQuery{Term: "scala"},
+				Right: &parser.TermQuery{Term: "functional"},
+			},
+		},
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "(tags = $1 AND tags = $2)", output.WhereClause)
+	assert.Equal(t, "scala", output.Parameters[0])
+	assert.Equal(t, "functional", output.Parameters[1])
+}
+
+func TestPostgresTranslator_FieldGroupQuery_Empty(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
+
+	ast := &parser.FieldGroupQuery{
+		Field:   "name",
+		Queries: []parser.Node{},
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	assert.Error(t, err)
+	assert.Nil(t, output)
+	assert.Contains(t, err.Error(), "empty")
+}
+
+func TestPostgresTranslator_FieldGroupQuery_InvalidField(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"name": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
+
+	ast := &parser.FieldGroupQuery{
+		Field: "invalid_field",
+		Queries: []parser.Node{
+			&parser.TermQuery{Term: "test"},
+		},
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	assert.Error(t, err)
+	assert.Nil(t, output)
+	assert.Contains(t, err.Error(), "not found")
+}
+
+func TestPostgresTranslator_FieldGroupQuery_CombinedWithOther(t *testing.T) {
+	translator := NewPostgresTranslator()
+
+	testSchema := schema.NewSchema("products", map[string]schema.Field{
+		"status": {Type: schema.TypeText},
+		"region": {Type: schema.TypeText},
+	}, schema.SchemaOptions{})
+
+	// status:(active OR pending) AND region:ca
+	ast := &parser.BinaryOp{
+		Op: "AND",
+		Left: &parser.FieldGroupQuery{
+			Field: "status",
+			Queries: []parser.Node{
+				&parser.TermQuery{Term: "active"},
+				&parser.TermQuery{Term: "pending"},
+			},
+		},
+		Right: &parser.FieldQuery{
+			Field: "region",
+			Value: &parser.TermValue{Term: "ca"},
+		},
+	}
+
+	output, err := translator.Translate(ast, testSchema)
+	require.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, "(status = $1 OR status = $2) AND region = $3", output.WhereClause)
+	assert.Len(t, output.Parameters, 3)
+}
