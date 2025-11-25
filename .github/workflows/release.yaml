@@ -177,45 +177,29 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: Release ${{ steps.version.outputs.VERSION }}
-          body: |
-            # rsearch ${{ steps.version.outputs.VERSION }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ steps.version.outputs.VERSION }} \
+            --title "Release ${{ steps.version.outputs.VERSION }}" \
+            --notes "# rsearch ${{ steps.version.outputs.VERSION }}
 
-            ${{ steps.changelog.outputs.CHANGELOG }}
+          ${{ steps.changelog.outputs.CHANGELOG }}
 
-            ## Installation
+          ## Installation
 
-            ### Docker
-            ```bash
-            docker pull ghcr.io/infiniv/rsearch:${{ steps.version.outputs.VERSION }}
-            ```
+          ### Docker
+          \`\`\`bash
+          docker pull ghcr.io/infiniv/rsearch:${{ steps.version.outputs.VERSION }}
+          \`\`\`
 
-            ### Binary
-            Download the appropriate binary for your platform from the assets below.
+          ### Binary
+          Download the appropriate binary for your platform from the assets below.
 
-            ### Quick Start
-            ```bash
-            # Extract the binary
-            tar -xzf rsearch-linux-amd64.tar.gz  # or unzip for Windows
-
-            # Run the service
-            ./rsearch-linux-amd64
-            ```
-
-            See the [README](https://github.com/${{ github.repository }}/blob/main/README.md) for full documentation.
-
-            ## Docker Image
-            - `ghcr.io/infiniv/rsearch:${{ steps.version.outputs.VERSION }}`
-            - `ghcr.io/infiniv/rsearch:latest`
-
-            ## Checksums
-            See checksums.txt in the release assets.
-          files: release-assets/*
-          draft: false
-          prerelease: false
-          generate_release_notes: true
+          ## Docker Image
+          - ghcr.io/infiniv/rsearch:${{ steps.version.outputs.VERSION }}
+          - ghcr.io/infiniv/rsearch:latest" \
+            release-assets/*
 
   verify-release:
     name: Verify Release
