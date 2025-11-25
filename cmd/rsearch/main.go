@@ -51,10 +51,13 @@ func main() {
 	schemaRegistry := schema.NewRegistry()
 	logger.Info("Schema registry initialized")
 
-	// Initialize translator registry
+	// Initialize translator registry with all supported databases
 	translatorRegistry := translator.NewRegistry()
 	translatorRegistry.Register("postgres", translator.NewPostgresTranslator())
-	logger.Info("Translator registry initialized with PostgreSQL support")
+	translatorRegistry.Register("mysql", translator.NewMySQLTranslator())
+	translatorRegistry.Register("sqlite", translator.NewSQLiteTranslator())
+	translatorRegistry.Register("mongodb", translator.NewMongoDBTranslator())
+	logger.Info("Translator registry initialized with PostgreSQL, MySQL, SQLite, and MongoDB support")
 
 	// Initialize rate limiter
 	rateLimiter := ratelimit.NewRateLimiter(cfg.Limits.RateLimit.RequestsPerMinute, cfg.Limits.RateLimit.Burst)

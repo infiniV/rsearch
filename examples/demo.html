@@ -3,9 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>rsearch - Query Translation Demo</title>
+    <title>rsearch Playground - Query Translation Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
     <style>
         :root {
+            --background: #faf9f5;
+            --foreground: #3d3929;
+            --card: #faf9f5;
+            --card-foreground: #141413;
+            --popover: #ffffff;
+            --popover-foreground: #28261b;
+            --primary: #c96442;
+            --primary-foreground: #ffffff;
+            --secondary: #e9e6dc;
+            --secondary-foreground: #535146;
+            --muted: #ede9de;
+            --muted-foreground: #83827d;
+            --accent: #e9e6dc;
+            --accent-foreground: #28261b;
+            --border: #dad9d4;
+            --input: #b4b2a7;
+            --ring: #c96442;
+            --success: #22c55e;
+            --error: #ef4444;
+            --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            --radius: 0.5rem;
+            --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
+            --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
+        }
+
+        .dark {
             --background: #262624;
             --foreground: #c3c0b6;
             --card: #262624;
@@ -23,1318 +54,1488 @@
             --border: #3e3e38;
             --input: #52514a;
             --ring: #d97757;
-            --success: #22c55e;
-            --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            --radius: 0.5rem;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
 
         body {
             font-family: var(--font-sans);
             background: var(--background);
             color: var(--foreground);
             line-height: 1.5;
+            min-height: 100vh;
         }
 
-        .container {
-            max-width: 100%;
-            height: 100vh;
-            margin: 0 auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
+        /* Header */
+        .header {
+            background: var(--card);
             border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
-        }
-
-        header h1 {
-            font-size: 1.4rem;
-            color: var(--card-foreground);
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
-
-        header p {
-            color: var(--muted-foreground);
-            font-size: 0.8rem;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 220px 1fr;
-            gap: 16px;
-            flex: 1;
-            min-height: 0;
-            overflow: hidden;
-        }
-
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            overflow: hidden;
-        }
-
-        .sidebar .card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            overflow: hidden;
-        }
-
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 12px;
-        }
-
-        .card h2 {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--muted-foreground);
-            margin-bottom: 8px;
-            font-weight: 500;
-            flex-shrink: 0;
-        }
-
-        .example-queries {
-            flex: 1;
-            overflow-y: auto;
-            scrollbar-width: thin;
-        }
-
-        .example-category { margin-bottom: 16px; }
-
-        .example-category h3 {
-            font-size: 0.65rem;
-            color: var(--primary);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 700;
-        }
-
-        .example-query {
-            background: var(--muted);
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            border-radius: calc(var(--radius) - 2px);
-            cursor: pointer;
-            transition: all 0.15s ease;
-            border: 1px solid transparent;
-        }
-
-        .example-query:hover {
-            background: var(--accent);
-            border-color: var(--primary);
-            transform: translateX(2px);
-        }
-
-        .example-query .name {
-            font-size: 0.75rem;
-            color: var(--foreground);
-            font-weight: 500;
-        }
-
-        .example-query .query {
-            font-family: var(--font-mono);
-            font-size: 0.68rem;
-            color: var(--muted-foreground);
-            margin-top: 2px;
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            min-height: 0;
-            overflow: hidden;
-        }
-
-        .query-section {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 12px;
-            flex-shrink: 0;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 12px 16px;
-            background: var(--muted);
-            border: 1px solid var(--border);
-            border-radius: calc(var(--radius) - 2px);
-            color: var(--card-foreground);
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.15);
-        }
-
-        input[type="text"]::placeholder { color: var(--muted-foreground); }
-
-        button {
-            padding: 12px 20px;
-            background: var(--primary);
-            color: var(--primary-foreground);
-            border: none;
-            border-radius: calc(var(--radius) - 2px);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-        button.secondary {
-            background: var(--muted);
-            color: var(--foreground);
-            border: 1px solid var(--border);
-        }
-        button.secondary:hover {
-            background: var(--accent);
-            border-color: var(--primary);
-        }
-        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .status-bar {
+            padding: 12px 24px;
             display: flex;
             align-items: center;
-            gap: 20px;
-            padding: 10px 14px;
-            background: var(--muted);
-            border-radius: calc(var(--radius) - 2px);
-            font-size: 0.75rem;
-            border: 1px solid var(--border);
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .status-item {
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .tagline {
+            color: var(--muted-foreground);
+            font-size: 0.875rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-link {
+            color: var(--muted-foreground);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.15s;
+        }
+
+        .header-link:hover {
+            color: var(--primary);
+        }
+
+        .status-indicator {
             display: flex;
             align-items: center;
             gap: 6px;
+            font-size: 0.875rem;
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #ef4444;
-            box-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
+            background: var(--muted-foreground);
         }
 
-        .status-dot.connected {
-            background: var(--success);
-            box-shadow: 0 0 4px rgba(34, 197, 94, 0.5);
-        }
+        .status-dot.connected { background: var(--success); }
+        .status-dot.error { background: var(--error); }
 
-        .status-label { color: var(--muted-foreground); }
-        .status-value { color: var(--foreground); font-family: var(--font-mono); font-weight: 500; }
-
-        .results-section {
-            background: var(--card);
+        .theme-toggle {
+            background: var(--muted);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 16px;
-            flex: 1;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: var(--foreground);
         }
 
-        .tab-content {
-            flex: 1;
-            overflow-y: auto;
-            scrollbar-width: thin;
+        .theme-toggle:hover {
+            background: var(--accent);
         }
 
-        .tab-content.active {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 16px;
+        /* Navigation */
+        .nav {
+            background: var(--card);
             border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
-            flex-shrink: 0;
+            padding: 0 24px;
         }
 
-        .tab {
-            padding: 8px 14px;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: calc(var(--radius) - 2px);
+        .nav-tabs {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-tab {
+            padding: 12px 4px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
             color: var(--muted-foreground);
-            font-size: 0.8rem;
+            font-size: 0.875rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.15s;
         }
 
-        .tab:hover {
+        .nav-tab:hover {
             color: var(--foreground);
-            background: var(--accent);
         }
 
-        .tab.active {
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Grid Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .grid-2 > * {
+            min-width: 0; /* Prevent grid blowout */
+            overflow: hidden;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--card-foreground);
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        /* Forms */
+        .input, .textarea, .select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
+            color: var(--foreground);
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .input:focus, .textarea:focus, .select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(201, 100, 66, 0.15);
+        }
+
+        .textarea {
+            font-family: var(--font-mono);
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .textarea.code {
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+
+        .query-input {
+            font-family: var(--font-mono);
+            color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border: none;
+            border-radius: calc(var(--radius) - 2px);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: var(--muted);
+            color: var(--foreground);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent);
+            border-color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Database Tabs */
+        .db-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .db-tab {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .db-tab:hover {
+            background: var(--muted);
+        }
+
+        .db-tab.active {
+            background: var(--muted);
+            color: var(--primary);
+        }
+
+        .db-output {
+            display: none;
+            padding: 16px;
+            max-height: 400px;
+            overflow: auto;
+        }
+
+        .db-output.active {
+            display: block;
+        }
+
+        /* Database Badges */
+        .db-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .db-postgres { background: #336791; color: white; }
+        .db-mysql { background: #4479A1; color: white; }
+        .db-sqlite { background: #003B57; color: white; }
+        .db-mongodb { background: #47A248; color: white; }
+
+        /* Code Blocks */
+        .code-block {
+            background: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .code-block.sql {
+            color: #0550ae;
+        }
+
+        .dark .code-block.sql {
+            color: #79c0ff;
+        }
+
+        /* Quick Examples */
+        .quick-examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .quick-btn {
+            padding: 6px 12px;
+            background: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
+            font-size: 0.7rem;
+            color: var(--foreground);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .quick-btn:hover {
+            background: var(--accent);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Example Cards */
+        .example-card {
+            background: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .example-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .example-card code {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .example-card p {
+            font-size: 0.7rem;
+            color: var(--muted-foreground);
+        }
+
+        /* Category Headers */
+        .category-header {
+            background: var(--accent);
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .category-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* DB Result Block */
+        .db-result {
+            background: var(--muted);
+            border-radius: calc(var(--radius) - 2px);
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .db-result-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .db-result pre {
+            margin: 0;
+            overflow-x: auto;
+        }
+
+        .params {
+            margin-top: 8px;
+            font-size: 0.7rem;
+            color: var(--muted-foreground);
+        }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--accent);
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        td code {
+            font-family: var(--font-mono);
+            color: var(--primary);
+            font-size: 0.75rem;
+        }
+
+        /* Error */
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: calc(var(--radius) - 2px);
+            padding: 12px;
+            color: var(--error);
+            font-size: 0.875rem;
+        }
+
+        /* Results Table */
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            table-layout: fixed;
+        }
+        .results-table th,
+        .results-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .results-table th {
+            background: var(--muted);
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted-foreground);
+            position: sticky;
+            top: 0;
+        }
+        .results-table tr:hover td {
+            background: var(--accent);
+        }
+        .results-table td.json-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+        }
+        .results-loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted-foreground);
+        }
+        .results-wrapper {
+            max-height: 400px;
+            overflow-x: auto;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 0 0 var(--radius) var(--radius);
+            margin: 0;
+        }
+        #results-section {
+            overflow: visible;
+        }
+        #results-section .card-header {
+            border-bottom: none;
+        }
+        .results-table {
+            min-width: 800px;
+        }
+        .db-result-tabs {
+            display: flex;
+            gap: 4px;
+        }
+        .db-result-tab {
+            padding: 4px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--background);
+            color: var(--muted-foreground);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .db-result-tab:hover {
+            background: var(--accent);
+        }
+        .db-result-tab.active {
             background: var(--primary);
             color: var(--primary-foreground);
             border-color: var(--primary);
         }
-
-        .tab-content { display: none; }
-
-        .result-block { margin-bottom: 18px; }
-        .result-block:last-child { margin-bottom: 0; }
-
-        .result-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--primary);
-            margin-bottom: 8px;
-            font-weight: 600;
+        .results-panel {
+            display: none;
         }
-
-        .result-value {
-            background: var(--muted);
-            padding: 12px 14px;
-            border-radius: calc(var(--radius) - 2px);
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: var(--card-foreground);
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-break: break-word;
-            line-height: 1.5;
-            border: 1px solid var(--border);
+        .results-panel.active {
+            display: block;
         }
-
-        .result-value.sql { color: #a5d6ff; }
-        .result-value.code { font-size: 0.75rem; line-height: 1.6; }
-
-        .param-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 6px 0;
+        .results-header {
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
             border-bottom: 1px solid var(--border);
         }
-
-        .param-item:last-child { border-bottom: none; }
-
-        .param-index {
-            color: var(--primary);
-            min-width: 28px;
-            font-weight: 600;
+        .results-meta {
+            font-family: 'JetBrains Mono', monospace;
         }
-        .param-value {
-            color: var(--card-foreground);
-            flex: 1;
-        }
-        .param-type {
+
+        /* Checkbox */
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
             color: var(--muted-foreground);
-            font-size: 0.7rem;
-            background: var(--accent);
-            padding: 2px 8px;
-            border-radius: 4px;
+            cursor: pointer;
         }
 
+        /* Placeholder */
         .placeholder {
             text-align: center;
             padding: 40px 20px;
             color: var(--muted-foreground);
         }
 
-        .error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 12px;
-            border-radius: calc(var(--radius) - 2px);
-            color: #fca5a5;
-        }
-
-        .code-comment { color: var(--muted-foreground); }
-        .code-keyword { color: #ff7b72; }
-        .code-string { color: #a5d6ff; }
-        .code-var { color: #ffa657; }
-
-        /* Database Results Table */
-        .db-table-wrapper {
-            flex: 1;
-            min-height: 0;
-            max-height: 100%;
-            overflow: auto;
-            border-radius: calc(var(--radius) - 2px);
-            border: 1px solid var(--border);
-            scrollbar-width: thin;
-        }
-
-        .db-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.75rem;
-        }
-
-        .db-table th {
-            text-align: left;
-            padding: 10px 12px;
-            background: var(--accent);
-            color: var(--primary);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            position: sticky;
-            top: 0;
-            border-bottom: 1px solid var(--border);
-            z-index: 1;
-        }
-
-        .db-table td {
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border);
-            color: var(--foreground);
-            font-family: var(--font-mono);
-            max-width: 180px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .db-table tr:hover td {
-            background: var(--accent);
-        }
-
-        .db-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .db-count {
-            font-size: 0.75rem;
-            color: var(--muted-foreground);
-            padding: 10px 0 0 0;
-            margin-top: 8px;
-        }
-
-        .db-count span { color: var(--success); font-weight: 600; }
-
-        /* Syntax Reference Styles */
-        .syntax-content {
-            max-height: calc(100vh - 300px);
-            overflow-y: auto;
-            scrollbar-width: thin;
-        }
-
-        .syntax-category {
-            margin-bottom: 20px;
-        }
-
-        .syntax-category h3 {
-            font-size: 0.8rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .syntax-item {
-            margin-bottom: 12px;
-            padding: 10px;
-            background: var(--muted);
-            border-radius: calc(var(--radius) - 2px);
-        }
-
-        .syntax-item h4 {
-            font-size: 0.75rem;
-            color: var(--card-foreground);
-            margin-bottom: 6px;
-        }
-
-        .syntax-query {
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            color: var(--primary);
-            background: var(--accent);
-            padding: 4px 8px;
-            border-radius: 3px;
-            margin-bottom: 4px;
-            display: inline-block;
-        }
-
-        .syntax-sql {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            color: #a5d6ff;
+        /* Syntax Reference */
+        .syntax-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
         }
 
         @media (max-width: 768px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-            .sidebar { display: none; }
-            .container { padding: 12px; }
-            header h1 { font-size: 1.2rem; }
+            .syntax-grid { grid-template-columns: 1fr; }
         }
 
-        /* Markdown rendering styles */
-        .md-content {
-            line-height: 1.6;
-        }
-
-        .md-content p {
+        .syntax-section h3 {
+            font-size: 1rem;
+            color: var(--primary);
             margin-bottom: 12px;
-        }
-
-        .md-h2 {
-            font-size: 1.2rem;
-            color: var(--card-foreground);
-            margin: 20px 0 12px 0;
             padding-bottom: 8px;
             border-bottom: 1px solid var(--border);
         }
 
-        .md-h3 {
-            font-size: 1rem;
-            color: var(--primary);
-            margin: 16px 0 10px 0;
+        /* DB Features Grid */
+        .db-features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 24px;
         }
 
-        .md-h4 {
-            font-size: 0.85rem;
-            color: var(--foreground);
-            margin: 12px 0 8px 0;
+        @media (max-width: 1024px) {
+            .db-features { grid-template-columns: repeat(2, 1fr); }
         }
 
-        .md-code {
+        @media (max-width: 600px) {
+            .db-features { grid-template-columns: 1fr; }
+        }
+
+        .db-feature-card {
             background: var(--muted);
-            padding: 10px 12px;
-            border-radius: calc(var(--radius) - 2px);
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            overflow-x: auto;
-            margin: 8px 0;
-            white-space: pre;
+            border-radius: var(--radius);
+            padding: 16px;
         }
 
-        .md-code.sql {
-            color: #a5d6ff;
+        .db-feature-card ul {
+            margin-top: 12px;
+            padding-left: 16px;
+            font-size: 0.8rem;
+            color: var(--muted-foreground);
         }
 
-        .md-code.json {
-            color: #7ee787;
-        }
-
-        .md-inline {
-            background: var(--accent);
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--primary);
-        }
-
-        .md-hr {
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 16px 0;
-        }
-
-        .md-link {
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .md-link:hover {
-            text-decoration: underline;
-        }
-
-        .md-content li {
-            margin-left: 20px;
+        .db-feature-card li {
             margin-bottom: 4px;
         }
 
-        /* Autocomplete styles */
-        .input-wrapper {
-            position: relative;
-            flex: 1;
-        }
-
-        .autocomplete-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--popover);
-            border: 1px solid var(--border);
-            border-radius: calc(var(--radius) - 2px);
-            max-height: 250px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            margin-top: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .autocomplete-dropdown.show {
-            display: block;
-        }
-
-        .autocomplete-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border);
+        /* Footer */
+        .footer {
+            border-top: 1px solid var(--border);
+            padding: 16px 24px;
+            margin-top: 32px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-        }
-
-        .autocomplete-item:last-child {
-            border-bottom: none;
-        }
-
-        .autocomplete-item:hover,
-        .autocomplete-item.selected {
-            background: var(--accent);
-        }
-
-        .autocomplete-item .syntax {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--primary);
-        }
-
-        .autocomplete-item .desc {
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             color: var(--muted-foreground);
         }
 
-        .autocomplete-category {
-            padding: 4px 12px;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            color: var(--muted-foreground);
-            background: var(--muted);
-            letter-spacing: 0.05em;
+        /* Complex examples full width */
+        .col-span-full {
+            grid-column: 1 / -1;
+        }
+
+        .complex-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .complex-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Animation */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>rsearch</h1>
-            <p>OpenSearch Query to SQL Translation</p>
-        </header>
-
-        <div class="main-grid">
-            <div class="sidebar">
-                <div class="card">
-                    <h2>Examples</h2>
-                    <div class="example-queries" id="exampleQueries"></div>
-                </div>
-            </div>
-
-            <div class="main-content">
-                <div class="query-section">
-                    <div class="input-row">
-                        <div class="input-wrapper">
-                            <input type="text" id="queryInput" placeholder="productCode:13w42 AND region:ca" autocomplete="off" />
-                            <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
-                        </div>
-                        <button id="translateBtn">Translate</button>
-                        <button id="executeBtn" class="secondary">Execute</button>
-                        <button id="clearBtn" class="secondary">Clear</button>
-                    </div>
-                    <div class="status-bar">
-                        <div class="status-item">
-                            <span class="status-dot" id="statusDot"></span>
-                            <span class="status-label">API:</span>
-                            <span class="status-value" id="statusText">Checking...</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-dot" id="dbStatusDot"></span>
-                            <span class="status-label">DB:</span>
-                            <span class="status-value" id="dbStatusText">-</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Latency:</span>
-                            <span class="status-value" id="latencyValue">-</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Queries:</span>
-                            <span class="status-value" id="queryCount">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="results-section">
-                    <div class="tabs">
-                        <button class="tab active" data-tab="translation">Translation</button>
-                        <button class="tab" data-tab="results">DB Results</button>
-                        <button class="tab" data-tab="integration">Integration</button>
-                        <button class="tab" data-tab="syntax">Syntax Reference</button>
-                    </div>
-
-                    <div id="translationTab" class="tab-content active">
-                        <div id="translationResults">
-                            <div class="placeholder">Enter a query above or click an example</div>
-                        </div>
-                    </div>
-
-                    <div id="resultsTab" class="tab-content">
-                        <div id="dbResultsMain" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
-                            <div class="placeholder">Click "Execute" to run query against database</div>
-                        </div>
-                    </div>
-
-                    <div id="integrationTab" class="tab-content">
-                        <div id="integrationCode">
-                            <div class="placeholder">Translate a query to see integration examples</div>
-                        </div>
-                    </div>
-
-                    <div id="syntaxTab" class="tab-content">
-                        <div id="syntaxReference" class="syntax-content"></div>
-                    </div>
-                </div>
-            </div>
-
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <span class="logo">rsearch</span>
+            <span class="tagline">Query Translation Playground</span>
         </div>
-    </div>
+        <div class="header-right">
+            <a href="https://github.com/infiniv/rsearch" target="_blank" class="header-link">GitHub</a>
+            <a href="/docs/openapi.yaml" target="_blank" class="header-link">API Docs</a>
+            <span id="status-indicator" class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Checking...</span>
+            </span>
+            <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('translator')" data-tab="translator">Translator</button>
+            <button class="nav-tab" onclick="showTab('examples')" data-tab="examples">Examples</button>
+            <button class="nav-tab" onclick="showTab('schemas')" data-tab="schemas">Schemas</button>
+            <button class="nav-tab" onclick="showTab('api')" data-tab="api">API Explorer</button>
+            <button class="nav-tab" onclick="showTab('reference')" data-tab="reference">Syntax Reference</button>
+        </div>
+    </nav>
+
+    <main class="main">
+        <!-- Translator Tab -->
+        <div id="panel-translator" class="tab-panel active">
+            <div class="grid-2">
+                <!-- Input Section -->
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Query Input</span>
+                            <select id="schema-select" class="select" style="width: auto;">
+                                <option value="products">products schema</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <textarea id="query-input" class="textarea query-input" placeholder="Enter your query... e.g., name:laptop AND price:[100 TO 500]"></textarea>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                                <div class="btn-group">
+                                    <button onclick="translateQuery()" class="btn btn-primary">Translate</button>
+                                    <button onclick="executeQuery()" class="btn btn-success" style="background: var(--success); border-color: var(--success);">Execute</button>
+                                    <button onclick="clearQuery()" class="btn btn-secondary">Clear</button>
+                                </div>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="auto-translate" checked>
+                                    Auto-translate
+                                </label>
+                            </div>
+                            <div class="quick-examples">
+                                <button class="quick-btn" onclick="setQuery('status:active')">Basic</button>
+                                <button class="quick-btn" onclick="setQuery('status:active AND price:[50 TO 150]')">AND + Range</button>
+                                <button class="quick-btn" onclick="setQuery('status:(active OR discontinued) AND region:ca')">Field Group</button>
+                                <button class="quick-btn" onclick="setQuery('name:Widget* OR name:Gadget*')">Wildcards</button>
+                                <button class="quick-btn" onclick="setQuery('name:\"Gadget Pro\"~2')">Fuzzy</button>
+                                <button class="quick-btn" onclick="setQuery('description:\"quality professional\"~5')">Proximity</button>
+                                <button class="quick-btn" onclick="setQuery('_exists_:tags AND price:>=100')">Exists</button>
+                                <button class="quick-btn" onclick="setQuery('name:/^Widget/')">Regex</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output Section -->
+                <div>
+                    <div class="card">
+                        <div class="db-tabs">
+                            <button class="db-tab active" onclick="showDbOutput('all')" data-db="all">All Databases</button>
+                            <button class="db-tab" onclick="showDbOutput('postgres')" data-db="postgres">PostgreSQL</button>
+                            <button class="db-tab" onclick="showDbOutput('mysql')" data-db="mysql">MySQL</button>
+                            <button class="db-tab" onclick="showDbOutput('sqlite')" data-db="sqlite">SQLite</button>
+                            <button class="db-tab" onclick="showDbOutput('mongodb')" data-db="mongodb">MongoDB</button>
+                        </div>
+                        <div id="output-all" class="db-output active">
+                            <p class="placeholder">Enter a query to see translations for all databases</p>
+                        </div>
+                        <div id="output-postgres" class="db-output"></div>
+                        <div id="output-mysql" class="db-output"></div>
+                        <div id="output-sqlite" class="db-output"></div>
+                        <div id="output-mongodb" class="db-output"></div>
+                    </div>
+                    <div id="error-display" class="error" style="display: none; margin-top: 16px;"></div>
+                </div>
+            </div>
+
+            <!-- Query Results Section (full width, below grid) -->
+            <div id="results-section" class="card" style="margin-top: 24px; display: none;">
+                <div class="card-header" style="flex-wrap: wrap; gap: 8px;">
+                    <span class="card-title">Query Results</span>
+                    <div class="db-result-tabs">
+                        <button class="db-result-tab active" onclick="showResultsTab('postgres')" data-db="postgres">PostgreSQL</button>
+                        <button class="db-result-tab" onclick="showResultsTab('mysql')" data-db="mysql">MySQL</button>
+                        <button class="db-result-tab" onclick="showResultsTab('mongodb')" data-db="mongodb">MongoDB</button>
+                    </div>
+                </div>
+                <div id="results-postgres" class="results-panel active">
+                    <div class="results-header">
+                        <span id="results-meta-postgres" class="results-meta"></span>
+                    </div>
+                    <div class="results-wrapper">
+                        <table class="results-table">
+                            <thead id="results-thead-postgres"></thead>
+                            <tbody id="results-tbody-postgres"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="results-mysql" class="results-panel">
+                    <div class="results-header">
+                        <span id="results-meta-mysql" class="results-meta"></span>
+                    </div>
+                    <div class="results-wrapper">
+                        <table class="results-table">
+                            <thead id="results-thead-mysql"></thead>
+                            <tbody id="results-tbody-mysql"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="results-mongodb" class="results-panel">
+                    <div class="results-header">
+                        <span id="results-meta-mongodb" class="results-meta"></span>
+                    </div>
+                    <div class="results-wrapper">
+                        <table class="results-table">
+                            <thead id="results-thead-mongodb"></thead>
+                            <tbody id="results-tbody-mongodb"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Examples Tab -->
+        <div id="panel-examples" class="tab-panel">
+            <div class="grid-3">
+                <!-- Basic Queries -->
+                <div class="card">
+                    <div class="category-header">Basic Queries</div>
+                    <div class="category-body">
+                        <div class="example-card" onclick="loadExample('name:laptop')">
+                            <code>name:laptop</code>
+                            <p>Simple field query</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('name:\"gaming laptop\"')">
+                            <code>name:"gaming laptop"</code>
+                            <p>Phrase query</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('laptop')">
+                            <code>laptop</code>
+                            <p>Default field query</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('\"portable computer\"')">
+                            <code>"portable computer"</code>
+                            <p>Phrase on default field</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boolean Operators -->
+                <div class="card">
+                    <div class="category-header">Boolean Operators</div>
+                    <div class="category-body">
+                        <div class="example-card" onclick="loadExample('name:laptop AND status:active')">
+                            <code>name:laptop AND status:active</code>
+                            <p>AND operator</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('region:US OR region:EU')">
+                            <code>region:US OR region:EU</code>
+                            <p>OR operator</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('name:laptop NOT status:discontinued')">
+                            <code>name:laptop NOT status:discontinued</code>
+                            <p>NOT operator</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('+name:laptop -status:discontinued')">
+                            <code>+name:laptop -status:discontinued</code>
+                            <p>Required (+) / Prohibited (-)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Range Queries -->
+                <div class="card">
+                    <div class="category-header">Range Queries</div>
+                    <div class="category-body">
+                        <div class="example-card" onclick="loadExample('price:[100 TO 500]')">
+                            <code>price:[100 TO 500]</code>
+                            <p>Inclusive range (BETWEEN)</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('price:{100 TO 500}')">
+                            <code>price:{100 TO 500}</code>
+                            <p>Exclusive range (> AND <)</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('price:>=100')">
+                            <code>price:>=100</code>
+                            <p>Comparison operators</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('price:[100 TO *]')">
+                            <code>price:[100 TO *]</code>
+                            <p>Unbounded range</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pattern Matching -->
+                <div class="card">
+                    <div class="category-header">Pattern Matching</div>
+                    <div class="category-body">
+                        <div class="example-card" onclick="loadExample('name:lap*')">
+                            <code>name:lap*</code>
+                            <p>Wildcard (*) - any characters</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('productCode:ABC-1?3')">
+                            <code>productCode:ABC-1?3</code>
+                            <p>Single char wildcard (?)</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('name:/^lap.*top$/i')">
+                            <code>name:/^lap.*top$/i</code>
+                            <p>Regex pattern</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Queries -->
+                <div class="card">
+                    <div class="category-header">Advanced Queries</div>
+                    <div class="category-body">
+                        <div class="example-card" onclick="loadExample('name:laptop~2')">
+                            <code>name:laptop~2</code>
+                            <p>Fuzzy search (edit distance 2)</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('description:\"fast processor\"~5')">
+                            <code>description:"fast processor"~5</code>
+                            <p>Proximity search (within 5 words)</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('name:laptop^2 OR name:tablet^1')">
+                            <code>name:laptop^2 OR name:tablet^1</code>
+                            <p>Boost (relevance weighting)</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('_exists_:tags')">
+                            <code>_exists_:tags</code>
+                            <p>Field existence check</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grouping -->
+                <div class="card">
+                    <div class="category-header">Grouping</div>
+                    <div class="category-body">
+                        <div class="example-card" onclick="loadExample('(name:laptop OR name:tablet) AND status:active')">
+                            <code>(name:laptop OR name:tablet) AND status:active</code>
+                            <p>Parentheses grouping</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('status:(active OR pending OR review)')">
+                            <code>status:(active OR pending OR review)</code>
+                            <p>Field group</p>
+                        </div>
+                        <div class="example-card" onclick="loadExample('region:(US OR EU) AND status:(active OR pending)')">
+                            <code>region:(US OR EU) AND status:(active OR pending)</code>
+                            <p>Multiple field groups</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complex Examples -->
+                <div class="card col-span-full">
+                    <div class="category-header">Complex Real-World Examples</div>
+                    <div class="category-body">
+                        <div class="complex-grid">
+                            <div class="example-card" onclick="loadExample('name:laptop AND price:[500 TO 1500] AND status:(active OR sale) AND _exists_:tags')">
+                                <code>name:laptop AND price:[500 TO 1500] AND status:(active OR sale) AND _exists_:tags</code>
+                                <p>E-commerce product search with filters</p>
+                            </div>
+                            <div class="example-card" onclick="loadExample('(name:lap* OR description:portable) AND NOT status:discontinued AND price:<=2000')">
+                                <code>(name:lap* OR description:portable) AND NOT status:discontinued AND price:<=2000</code>
+                                <p>Multi-field search with exclusion</p>
+                            </div>
+                            <div class="example-card" onclick="loadExample('region:(US OR EU OR UK) AND price:{100 TO 500} AND name:laptop~1')">
+                                <code>region:(US OR EU OR UK) AND price:{100 TO 500} AND name:laptop~1</code>
+                                <p>Multi-region search with fuzzy matching</p>
+                            </div>
+                            <div class="example-card" onclick="loadExample('+name:\"gaming laptop\" +status:active -region:CN price:[* TO 2000]')">
+                                <code>+name:"gaming laptop" +status:active -region:CN price:[* TO 2000]</code>
+                                <p>Required/prohibited with unbounded range</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schemas Tab -->
+        <div id="panel-schemas" class="tab-panel">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Registered Schemas</span>
+                        <button onclick="refreshSchemas()" class="btn btn-secondary btn-sm">Refresh</button>
+                    </div>
+                    <div class="card-body" id="schema-list">
+                        <p class="placeholder">Loading schemas...</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Schema Editor</span>
+                        <div class="btn-group">
+                            <button onclick="loadDefaultSchema()" class="btn btn-secondary btn-sm">Load Default</button>
+                            <button onclick="registerSchema()" class="btn btn-primary btn-sm">Register</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="schema-editor" class="textarea code" style="min-height: 300px;" placeholder="Enter schema JSON..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Explorer Tab -->
+        <div id="panel-api" class="tab-panel">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Request Builder</span>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                            <select id="api-method" class="select" style="width: 100px;">
+                                <option value="GET">GET</option>
+                                <option value="POST" selected>POST</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+                            <select id="api-endpoint" class="select">
+                                <option value="/api/v1/translate">POST /api/v1/translate</option>
+                                <option value="/api/v1/schemas">POST /api/v1/schemas</option>
+                                <option value="/api/v1/schemas/products">GET /api/v1/schemas/{name}</option>
+                                <option value="/health">GET /health</option>
+                                <option value="/ready">GET /ready</option>
+                                <option value="/metrics">GET /metrics</option>
+                            </select>
+                        </div>
+                        <label style="font-size: 0.8rem; color: var(--muted-foreground); margin-bottom: 8px; display: block;">Request Body (JSON)</label>
+                        <textarea id="api-body" class="textarea code" style="min-height: 200px;">{
+  "query": "name:laptop AND price:[100 TO 500]",
+  "schema": "products",
+  "database": "postgres"
+}</textarea>
+                        <button onclick="sendApiRequest()" class="btn btn-primary" style="width: 100%; margin-top: 12px;">Send Request</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Response</span>
+                        <span id="api-status" style="font-size: 0.8rem; color: var(--muted-foreground);"></span>
+                    </div>
+                    <div class="card-body">
+                        <pre id="api-response" class="code-block" style="min-height: 300px; max-height: 400px; overflow: auto;"><code>// Response will appear here</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 24px;">
+                <div class="card-header">
+                    <span class="card-title">Available Endpoints</span>
+                </div>
+                <div class="card-body">
+                    <div class="grid-3">
+                        <div class="code-block">
+                            <strong style="color: var(--primary);">POST /api/v1/translate</strong>
+                            <p style="margin-top: 8px; font-size: 0.8rem; color: var(--muted-foreground);">Translate query string to database-specific SQL</p>
+                        </div>
+                        <div class="code-block">
+                            <strong style="color: var(--success);">POST /api/v1/schemas</strong>
+                            <p style="margin-top: 8px; font-size: 0.8rem; color: var(--muted-foreground);">Register a new schema</p>
+                        </div>
+                        <div class="code-block">
+                            <strong style="color: #eab308;">GET /api/v1/schemas/{name}</strong>
+                            <p style="margin-top: 8px; font-size: 0.8rem; color: var(--muted-foreground);">Get schema by name</p>
+                        </div>
+                        <div class="code-block">
+                            <strong style="color: var(--error);">DELETE /api/v1/schemas/{name}</strong>
+                            <p style="margin-top: 8px; font-size: 0.8rem; color: var(--muted-foreground);">Delete schema by name</p>
+                        </div>
+                        <div class="code-block">
+                            <strong style="color: #8b5cf6;">GET /health</strong>
+                            <p style="margin-top: 8px; font-size: 0.8rem; color: var(--muted-foreground);">Health check endpoint</p>
+                        </div>
+                        <div class="code-block">
+                            <strong style="color: #8b5cf6;">GET /metrics</strong>
+                            <p style="margin-top: 8px; font-size: 0.8rem; color: var(--muted-foreground);">Prometheus metrics (if enabled)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Syntax Reference Tab -->
+        <div id="panel-reference" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Complete Query Syntax Reference</span>
+                </div>
+                <div class="card-body">
+                    <div class="syntax-grid">
+                        <div class="syntax-section">
+                            <h3>Field Queries</h3>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead><tr><th>Syntax</th><th>Description</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>field:value</code></td><td>Exact match</td></tr>
+                                        <tr><td><code>field:"phrase"</code></td><td>Phrase match</td></tr>
+                                        <tr><td><code>field:wild*</code></td><td>Wildcard (LIKE)</td></tr>
+                                        <tr><td><code>field:/regex/</code></td><td>Regex match (~)</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h3>Boolean Operators</h3>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead><tr><th>Syntax</th><th>Description</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>AND, &&</code></td><td>Conjunction</td></tr>
+                                        <tr><td><code>OR, ||</code></td><td>Disjunction</td></tr>
+                                        <tr><td><code>NOT, !</code></td><td>Negation</td></tr>
+                                        <tr><td><code>+term</code></td><td>Required (pass-through)</td></tr>
+                                        <tr><td><code>-term</code></td><td>Prohibited (NOT)</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h3>Range Queries</h3>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead><tr><th>Syntax</th><th>Description</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>[a TO b]</code></td><td>Inclusive (BETWEEN)</td></tr>
+                                        <tr><td><code>{a TO b}</code></td><td>Exclusive (> AND <)</td></tr>
+                                        <tr><td><code>[a TO b}</code></td><td>Mixed (>= AND <)</td></tr>
+                                        <tr><td><code>>=, >, <=, <</code></td><td>Comparison operators</td></tr>
+                                        <tr><td><code>[a TO *]</code></td><td>Unbounded range</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h3>Advanced Queries</h3>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead><tr><th>Syntax</th><th>Description</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>term~N</code></td><td>Fuzzy (edit distance N)</td></tr>
+                                        <tr><td><code>"phrase"~N</code></td><td>Proximity (within N words)</td></tr>
+                                        <tr><td><code>term^N</code></td><td>Boost (relevance weight)</td></tr>
+                                        <tr><td><code>_exists_:field</code></td><td>Field existence (IS NOT NULL)</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h3>Grouping</h3>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead><tr><th>Syntax</th><th>Description</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><code>(a OR b)</code></td><td>Parentheses grouping</td></tr>
+                                        <tr><td><code>field:(a OR b)</code></td><td>Field group</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="syntax-section">
+                            <h3>Operator Precedence</h3>
+                            <p style="color: var(--muted-foreground); font-size: 0.8rem; margin-bottom: 8px;">Lowest to highest:</p>
+                            <ol style="font-size: 0.8rem; padding-left: 20px; color: var(--foreground);">
+                                <li>OR (lowest)</li>
+                                <li>AND</li>
+                                <li>NOT</li>
+                                <li>Required/Prohibited (+/-)</li>
+                                <li>Field (:)</li>
+                                <li>Boost (^)</li>
+                                <li>Fuzzy (~) (highest)</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <h3 style="color: var(--primary); margin-top: 32px; margin-bottom: 16px;">Database-Specific Features</h3>
+                    <div class="db-features">
+                        <div class="db-feature-card">
+                            <span class="db-badge db-postgres">PostgreSQL</span>
+                            <ul>
+                                <li>$1, $2 parameterization</li>
+                                <li>~ for regex</li>
+                                <li>levenshtein() for fuzzy</li>
+                                <li>phraseto_tsquery() for proximity</li>
+                            </ul>
+                        </div>
+                        <div class="db-feature-card">
+                            <span class="db-badge db-mysql">MySQL</span>
+                            <ul>
+                                <li>? parameterization</li>
+                                <li>REGEXP for regex</li>
+                                <li>SOUNDEX() for fuzzy</li>
+                                <li>MATCH AGAINST for proximity</li>
+                            </ul>
+                        </div>
+                        <div class="db-feature-card">
+                            <span class="db-badge db-sqlite">SQLite</span>
+                            <ul>
+                                <li>? parameterization</li>
+                                <li>REGEXP for regex</li>
+                                <li>FTS5 for proximity</li>
+                                <li>json_extract() for JSON</li>
+                            </ul>
+                        </div>
+                        <div class="db-feature-card">
+                            <span class="db-badge db-mongodb">MongoDB</span>
+                            <ul>
+                                <li>BSON query documents</li>
+                                <li>$regex for patterns</li>
+                                <li>$text for full-text</li>
+                                <li>$exists for null checks</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <span>rsearch - Query Translation Service</span>
+        <span>Supports PostgreSQL, MySQL, SQLite, MongoDB</span>
+    </footer>
 
     <script>
-        // Auto-detect host (works for both localhost and WSL IP)
-        const HOST = window.location.hostname;
-        const API_URL = `http://${HOST}:8080`;
-        const DEMO_SERVER = `http://${HOST}:3000`;
-        const SCHEMA = 'products';
-        const DATABASE = 'postgres';
+        // Auto-detect API base - if served from demo server (3000), use rsearch API (8080)
+        const API_BASE = window.location.port === '3000'
+            ? `${window.location.protocol}//${window.location.hostname}:8080`
+            : window.location.origin;
+        let translateTimeout = null;
 
-        const exampleQueries = [
-            {
-                category: 'Basic',
-                queries: [
-                    { name: 'Field match', query: 'productCode:13w42' },
-                    { name: 'By name', query: 'name:Widget' },
-                    { name: 'By region', query: 'region:ca' },
-                    { name: 'Numeric', query: 'rodLength:150' },
-                ]
+        // Default schema
+        const DEFAULT_SCHEMA = {
+            name: "products",
+            fields: {
+                productCode: { type: "text", indexed: true, aliases: ["code", "sku"] },
+                name: { type: "text", indexed: true },
+                description: { type: "text" },
+                rodLength: { type: "integer" },
+                price: { type: "float" },
+                region: { type: "text", indexed: true },
+                inStock: { type: "boolean" },
+                status: { type: "text", indexed: true },
+                tags: { type: "array" },
+                metadata: { type: "json" },
+                createdAt: { type: "datetime" }
             },
-            {
-                category: 'Boolean',
-                queries: [
-                    { name: 'AND', query: 'productCode:13w42 AND region:ca' },
-                    { name: 'OR', query: 'region:ca OR region:ny' },
-                    { name: 'NOT', query: 'region:ca AND NOT status:discontinued' },
-                    { name: '&& / ||', query: 'name:Widget && region:ca' },
-                ]
-            },
-            {
-                category: 'Ranges',
-                queries: [
-                    { name: 'Inclusive', query: 'rodLength:[50 TO 200]' },
-                    { name: 'Exclusive', query: 'price:{10 TO 100}' },
-                    { name: '>= / <', query: 'price:>=50' },
-                    { name: 'Unbounded', query: 'price:[100 TO *]' },
-                ]
-            },
-            {
-                category: 'Wildcards',
-                queries: [
-                    { name: 'Prefix', query: 'name:Widget*' },
-                    { name: 'Suffix', query: 'name:*get' },
-                    { name: 'Single ?', query: 'productCode:13w4?' },
-                ]
-            },
-            {
-                category: 'Advanced',
-                queries: [
-                    { name: 'Regex', query: 'name:/wi[dg]get/' },
-                    { name: 'Exists', query: '_exists_:description' },
-                    { name: 'Boost', query: 'name:laptop^2' },
-                ]
-            },
-            {
-                category: 'Complex',
-                queries: [
-                    { name: 'Grouped', query: '(region:ca OR region:ny) AND price:<150' },
-                    { name: 'Multi-field', query: 'name:Widget* AND rodLength:[100 TO 300]' },
-                ]
-            }
-        ];
-
-        const syntaxReference = [
-            {
-                category: 'Field Queries',
-                items: [
-                    { query: 'field:value', sql: 'field = $1', desc: 'Exact match' },
-                    { query: 'field:"phrase"', sql: 'field = $1', desc: 'Phrase match' },
-                    { query: 'field:wild*', sql: 'field LIKE $1', desc: 'Wildcard (%)' },
-                    { query: 'field:wi?d', sql: 'field LIKE $1', desc: 'Single char (_)' },
-                    { query: 'field:/regex/', sql: 'field ~ $1', desc: 'Regex match' },
-                ]
-            },
-            {
-                category: 'Boolean Operators',
-                items: [
-                    { query: 'a AND b', sql: 'a AND b', desc: 'Both must match' },
-                    { query: 'a OR b', sql: 'a OR b', desc: 'Either matches' },
-                    { query: 'NOT a', sql: 'NOT a', desc: 'Must not match' },
-                    { query: 'a && b', sql: 'a AND b', desc: 'Symbol AND' },
-                    { query: 'a || b', sql: 'a OR b', desc: 'Symbol OR' },
-                    { query: '!a', sql: 'NOT a', desc: 'Symbol NOT' },
-                ]
-            },
-            {
-                category: 'Range Queries',
-                items: [
-                    { query: '[50 TO 500]', sql: 'BETWEEN $1 AND $2', desc: 'Inclusive' },
-                    { query: '{50 TO 500}', sql: '> $1 AND < $2', desc: 'Exclusive' },
-                    { query: '[50 TO 500}', sql: '>= $1 AND < $2', desc: 'Mixed' },
-                    { query: '>=100', sql: '>= $1', desc: 'Greater or equal' },
-                    { query: '<100', sql: '< $1', desc: 'Less than' },
-                    { query: '[100 TO *]', sql: '>= $1', desc: 'Unbounded' },
-                ]
-            },
-            {
-                category: 'Grouping',
-                items: [
-                    { query: '(a OR b) AND c', sql: '(a OR b) AND c', desc: 'Parentheses' },
-                    { query: 'field:(a OR b)', sql: '(field=$1 OR field=$2)', desc: 'Field group' },
-                ]
-            },
-            {
-                category: 'Special',
-                items: [
-                    { query: '_exists_:field', sql: 'field IS NOT NULL', desc: 'Field exists' },
-                    { query: 'field:value^2', sql: 'field = $1 + metadata', desc: 'Boost' },
-                    { query: '+term', sql: 'term (required)', desc: 'Required' },
-                    { query: '-term', sql: 'NOT term', desc: 'Prohibited' },
-                ]
-            }
-        ];
-
-        // Autocomplete suggestions
-        const autocompleteSuggestions = [
-            // Fields (from schema)
-            { type: 'field', text: 'productCode:', desc: 'Product code field' },
-            { type: 'field', text: 'name:', desc: 'Product name field' },
-            { type: 'field', text: 'description:', desc: 'Description field' },
-            { type: 'field', text: 'rodLength:', desc: 'Rod length (integer)' },
-            { type: 'field', text: 'price:', desc: 'Price (float)' },
-            { type: 'field', text: 'region:', desc: 'Region field' },
-            { type: 'field', text: 'status:', desc: 'Status field' },
-            { type: 'field', text: 'inStock:', desc: 'In stock (boolean)' },
-            // Operators
-            { type: 'operator', text: 'AND ', desc: 'Both conditions must match' },
-            { type: 'operator', text: 'OR ', desc: 'Either condition matches' },
-            { type: 'operator', text: 'NOT ', desc: 'Negates condition' },
-            // Range syntax
-            { type: 'range', text: ':[* TO *]', desc: 'Inclusive range' },
-            { type: 'range', text: ':{* TO *}', desc: 'Exclusive range' },
-            { type: 'range', text: ':>=', desc: 'Greater than or equal' },
-            { type: 'range', text: ':<=', desc: 'Less than or equal' },
-            { type: 'range', text: ':>', desc: 'Greater than' },
-            { type: 'range', text: ':<', desc: 'Less than' },
-            // Special
-            { type: 'special', text: '_exists_:', desc: 'Field exists check' },
-            { type: 'special', text: ':*', desc: 'Wildcard (any chars)' },
-            { type: 'special', text: ':?', desc: 'Single char wildcard' },
-            { type: 'special', text: ':/.+/', desc: 'Regex pattern' },
-            { type: 'special', text: '~', desc: 'Fuzzy search' },
-            { type: 'special', text: '^', desc: 'Boost factor' },
-        ];
-
-        let queryCount = 0;
-        let lastResult = null;
-        let lastTranslation = null;
-        let selectedAutocompleteIndex = -1;
-
-        function setupAutocomplete() {
-            const input = document.getElementById('queryInput');
-            const dropdown = document.getElementById('autocompleteDropdown');
-
-            input.addEventListener('input', () => {
-                showAutocomplete(input.value, input.selectionStart);
-            });
-
-            input.addEventListener('keydown', (e) => {
-                const isDropdownVisible = dropdown.classList.contains('show');
-                const items = dropdown.querySelectorAll('.autocomplete-item');
-
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (isDropdownVisible && selectedAutocompleteIndex >= 0) {
-                        items[selectedAutocompleteIndex].click();
-                    } else {
-                        hideAutocomplete();
-                        translateQuery();
-                    }
-                    return;
+            options: {
+                namingConvention: "snake_case",
+                defaultField: "name",
+                enabledFeatures: {
+                    fuzzy: true,
+                    proximity: true,
+                    regex: true
                 }
-
-                if (!isDropdownVisible) return;
-
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    selectedAutocompleteIndex = Math.min(selectedAutocompleteIndex + 1, items.length - 1);
-                    updateAutocompleteSelection(items);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    selectedAutocompleteIndex = Math.max(selectedAutocompleteIndex - 1, 0);
-                    updateAutocompleteSelection(items);
-                } else if (e.key === 'Escape') {
-                    hideAutocomplete();
-                } else if (e.key === 'Tab' && selectedAutocompleteIndex >= 0) {
-                    e.preventDefault();
-                    items[selectedAutocompleteIndex].click();
-                }
-            });
-
-            input.addEventListener('blur', () => {
-                setTimeout(hideAutocomplete, 150);
-            });
-        }
-
-        function showAutocomplete(value, cursorPos) {
-            const dropdown = document.getElementById('autocompleteDropdown');
-
-            // Get the current word being typed
-            const beforeCursor = value.substring(0, cursorPos);
-            const words = beforeCursor.split(/\s+/);
-            const currentWord = words[words.length - 1].toLowerCase();
-
-            if (currentWord.length < 1) {
-                hideAutocomplete();
-                return;
             }
+        };
 
-            // Filter suggestions
-            const matches = autocompleteSuggestions.filter(s =>
-                s.text.toLowerCase().includes(currentWord) ||
-                s.desc.toLowerCase().includes(currentWord)
-            );
-
-            if (matches.length === 0) {
-                hideAutocomplete();
-                return;
-            }
-
-            // Group by type
-            const grouped = {};
-            matches.forEach(m => {
-                if (!grouped[m.type]) grouped[m.type] = [];
-                grouped[m.type].push(m);
-            });
-
-            // Render dropdown
-            let html = '';
-            const typeLabels = { field: 'Fields', operator: 'Operators', range: 'Ranges', special: 'Special' };
-            Object.keys(grouped).forEach(type => {
-                html += `<div class="autocomplete-category">${typeLabels[type] || type}</div>`;
-                grouped[type].forEach(item => {
-                    html += `<div class="autocomplete-item" data-text="${escapeHtml(item.text)}">
-                        <span class="syntax">${escapeHtml(item.text)}</span>
-                        <span class="desc">${escapeHtml(item.desc)}</span>
-                    </div>`;
-                });
-            });
-
-            dropdown.innerHTML = html;
-            dropdown.classList.add('show');
-            selectedAutocompleteIndex = -1;
-
-            // Add click handlers
-            dropdown.querySelectorAll('.autocomplete-item').forEach((item, idx) => {
-                item.addEventListener('click', () => {
-                    insertAutocomplete(item.dataset.text);
-                });
-                item.addEventListener('mouseenter', () => {
-                    selectedAutocompleteIndex = idx;
-                    updateAutocompleteSelection(dropdown.querySelectorAll('.autocomplete-item'));
-                });
-            });
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
         }
 
-        function hideAutocomplete() {
-            document.getElementById('autocompleteDropdown').classList.remove('show');
-            selectedAutocompleteIndex = -1;
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark');
         }
 
-        function updateAutocompleteSelection(items) {
-            items.forEach((item, idx) => {
-                item.classList.toggle('selected', idx === selectedAutocompleteIndex);
-            });
+        // Tab Navigation
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`panel-${tabName}`).classList.add('active');
+            document.querySelector(`.nav-tab[data-tab="${tabName}"]`).classList.add('active');
         }
 
-        function insertAutocomplete(text) {
-            const input = document.getElementById('queryInput');
-            const cursorPos = input.selectionStart;
-            const value = input.value;
-
-            // Find the start of the current word
-            const beforeCursor = value.substring(0, cursorPos);
-            const words = beforeCursor.split(/\s+/);
-            const currentWord = words[words.length - 1];
-            const wordStart = cursorPos - currentWord.length;
-
-            // Replace the current word with the suggestion
-            const newValue = value.substring(0, wordStart) + text + value.substring(cursorPos);
-            input.value = newValue;
-
-            // Move cursor to end of inserted text
-            const newCursorPos = wordStart + text.length;
-            input.setSelectionRange(newCursorPos, newCursorPos);
-            input.focus();
-
-            hideAutocomplete();
+        // Database Output Tabs
+        function showDbOutput(db) {
+            document.querySelectorAll('.db-output').forEach(o => o.classList.remove('active'));
+            document.querySelectorAll('.db-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`output-${db}`).classList.add('active');
+            document.querySelector(`.db-tab[data-db="${db}"]`).classList.add('active');
         }
 
-        function renderExampleQueries() {
-            const container = document.getElementById('exampleQueries');
-            exampleQueries.forEach(category => {
-                const div = document.createElement('div');
-                div.className = 'example-category';
-                div.innerHTML = `<h3>${category.category}</h3>`;
-                category.queries.forEach(ex => {
-                    const item = document.createElement('div');
-                    item.className = 'example-query';
-                    item.innerHTML = `<div class="name">${ex.name}</div><div class="query">${ex.query}</div>`;
-                    item.onclick = () => {
-                        document.getElementById('queryInput').value = ex.query;
-                        translateQuery();
-                    };
-                    div.appendChild(item);
-                });
-                container.appendChild(div);
-            });
-        }
-
-        async function renderSyntaxReference() {
-            const container = document.getElementById('syntaxReference');
-
-            // Try to load from server first (with timeout)
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
-                const response = await fetch(`${DEMO_SERVER}/api/docs/syntax`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (response.ok) {
-                    const markdown = await response.text();
-                    container.innerHTML = renderMarkdown(markdown);
-                    return;
-                }
-            } catch (e) {
-                console.log('Could not load docs from server, using built-in reference');
-            }
-
-            // Fallback to built-in reference
-            syntaxReference.forEach(cat => {
-                const div = document.createElement('div');
-                div.className = 'syntax-category';
-                div.innerHTML = `<h3>${cat.category}</h3>`;
-                cat.items.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'syntax-item';
-                    itemDiv.innerHTML = `
-                        <h4>${item.desc}</h4>
-                        <div class="syntax-query">${escapeHtml(item.query)}</div>
-                        <div class="syntax-sql">${escapeHtml(item.sql)}</div>
-                    `;
-                    div.appendChild(itemDiv);
-                });
-                container.appendChild(div);
-            });
-        }
-
-        function renderMarkdown(md) {
-            // Simple markdown to HTML converter
-            let html = md
-                // Headers
-                .replace(/^### (.+)$/gm, '<h4 class="md-h4">$1</h4>')
-                .replace(/^## (.+)$/gm, '<h3 class="md-h3">$1</h3>')
-                .replace(/^# (.+)$/gm, '<h2 class="md-h2">$1</h2>')
-                // Code blocks
-                .replace(/```sql\n([\s\S]*?)```/g, '<pre class="md-code sql">$1</pre>')
-                .replace(/```json\n([\s\S]*?)```/g, '<pre class="md-code json">$1</pre>')
-                .replace(/```\n([\s\S]*?)```/g, '<pre class="md-code">$1</pre>')
-                // Inline code
-                .replace(/`([^`]+)`/g, '<code class="md-inline">$1</code>')
-                // Bold
-                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-                // Italic
-                .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-                // Lists
-                .replace(/^- (.+)$/gm, '<li>$1</li>')
-                .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
-                // Horizontal rule
-                .replace(/^---$/gm, '<hr class="md-hr">')
-                // Links
-                .replace(/\[([^\]]+)\]\(#([^)]+)\)/g, '<a href="#$2" class="md-link">$1</a>')
-                // Paragraphs
-                .replace(/\n\n/g, '</p><p>')
-                // Table of contents links
-                .replace(/^- \[(.+)\]\(#(.+)\)$/gm, '<li><a href="#$2">$1</a></li>');
-
-            return `<div class="md-content"><p>${html}</p></div>`;
-        }
-
-        async function checkServerStatus() {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
-                const response = await fetch(`${API_URL}/health`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (response.ok) {
-                    document.getElementById('statusDot').classList.add('connected');
-                    document.getElementById('statusText').textContent = 'Connected';
-                    document.getElementById('dbStatusDot').classList.add('connected');
-                    document.getElementById('dbStatusText').textContent = 'Ready';
-                    return true;
-                }
-            } catch (e) {
-                document.getElementById('statusDot').classList.remove('connected');
-                document.getElementById('statusText').textContent = 'Offline';
-                document.getElementById('dbStatusDot').classList.remove('connected');
-                document.getElementById('dbStatusText').textContent = 'Unavailable';
-            }
-            return false;
-        }
-
-        async function translateQuery() {
-            const query = document.getElementById('queryInput').value.trim();
-            if (!query) {
-                showError('Enter a query');
-                return;
-            }
-
-            showLoading();
-            const startTime = performance.now();
-
-            try {
-                const response = await fetch(`${API_URL}/api/v1/translate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ schema: SCHEMA, database: DATABASE, query })
-                });
-
-                const latency = Math.round(performance.now() - startTime);
-                document.getElementById('latencyValue').textContent = latency + 'ms';
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.error || `Error ${response.status}`);
-                }
-
-                const data = await response.json();
-                queryCount++;
-                document.getElementById('queryCount').textContent = queryCount;
-
-                lastResult = { query, data };
-                lastTranslation = data;
-                showResults(query, data);
-                showIntegration(query, data);
-
-            } catch (e) {
-                showError(e.message);
+        // Query Input
+        function setQuery(query) {
+            document.getElementById('query-input').value = query;
+            if (document.getElementById('auto-translate').checked) {
+                translateQuery();
             }
         }
 
+        function clearQuery() {
+            document.getElementById('query-input').value = '';
+            resetOutputs();
+        }
+
+        function loadExample(query) {
+            setQuery(query);
+            showTab('translator');
+        }
+
+        function resetOutputs() {
+            document.getElementById('output-all').innerHTML = '<p class="placeholder">Enter a query to see translations for all databases</p>';
+            ['postgres', 'mysql', 'sqlite', 'mongodb'].forEach(db => {
+                document.getElementById(`output-${db}`).innerHTML = '';
+            });
+            document.getElementById('error-display').style.display = 'none';
+            document.getElementById('results-section').style.display = 'none';
+        }
+
+        // Execute query against all databases
         async function executeQuery() {
-            const query = document.getElementById('queryInput').value.trim();
+            const query = document.getElementById('query-input').value.trim();
             if (!query) {
-                showDbError('Enter a query first');
+                alert('Please enter a query first');
                 return;
             }
 
-            const startTime = performance.now();
-            document.getElementById('executeBtn').disabled = true;
+            const schemaName = document.getElementById('schema-select').value;
+            const resultsSection = document.getElementById('results-section');
+            resultsSection.style.display = 'block';
 
-            try {
-                const response = await fetch(`${DEMO_SERVER}/api/execute`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        schema: SCHEMA,
-                        database: DATABASE,
-                        query: query
-                    })
-                });
+            const DEMO_API = window.location.port === '3000'
+                ? window.location.origin
+                : `${window.location.protocol}//${window.location.hostname}:3000`;
 
-                const latency = Math.round(performance.now() - startTime);
+            const databases = ['postgres', 'mysql', 'mongodb'];
 
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.error || `Error ${response.status}`);
+            // Show loading state for all
+            databases.forEach(db => {
+                document.getElementById(`results-meta-${db}`).textContent = 'Executing...';
+                document.getElementById(`results-thead-${db}`).innerHTML = '';
+                document.getElementById(`results-tbody-${db}`).innerHTML = '<tr><td colspan="10" class="results-loading">Loading...</td></tr>';
+            });
+
+            // Execute all databases in parallel
+            await Promise.all(databases.map(async (db) => {
+                const meta = document.getElementById(`results-meta-${db}`);
+                const thead = document.getElementById(`results-thead-${db}`);
+                const tbody = document.getElementById(`results-tbody-${db}`);
+
+                try {
+                    const response = await fetch(`${DEMO_API}/api/execute`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query, schema: schemaName, database: db })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Execution failed');
+                    }
+
+                    meta.innerHTML = `${data.count} rows | ${data.duration}ms`;
+                    renderResultsTable(thead, tbody, data.rows);
+                } catch (error) {
+                    meta.textContent = '';
+                    thead.innerHTML = '';
+                    tbody.innerHTML = `<tr><td class="results-loading" style="color: var(--error);">Error: ${escapeHtml(error.message)}</td></tr>`;
                 }
-
-                const data = await response.json();
-                showDbResults(data.rows || [], data.count || 0, data.duration || latency, false, data.sql);
-
-                // Switch to results tab
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                document.querySelector('[data-tab="results"]').classList.add('active');
-                document.getElementById('resultsTab').classList.add('active');
-
-            } catch (e) {
-                // If demo server not running, show error with instructions
-                if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
-                    showDbError('Demo server not running. Start it with: cd examples && npm install && npm start');
-                } else {
-                    showDbError(e.message);
-                }
-            } finally {
-                document.getElementById('executeBtn').disabled = false;
-            }
+            }));
         }
 
-        function showMockDbResults() {
-            // Show mock data when execute endpoint isn't available
-            const mockRows = [
-                { id: 1, product_code: '13w42', name: 'Widget Pro', region: 'ca', price: 99.99, rod_length: 150 },
-                { id: 2, product_code: '13w43', name: 'Widget Plus', region: 'ca', price: 149.99, rod_length: 200 },
-                { id: 3, product_code: '14x51', name: 'Gadget Basic', region: 'ny', price: 79.99, rod_length: 100 },
-            ];
-            showDbResults(mockRows, mockRows.length, 12, true);
-        }
-
-        function showDbResults(rows, count, latency, isMock = false, executedSql = null) {
-            if (!rows || rows.length === 0) {
-                document.getElementById('dbResultsMain').innerHTML = `<div class="placeholder">No results found</div>`;
-                return;
-            }
-
-            const columns = Object.keys(rows[0]);
-            const sqlInfo = executedSql ? `<div class="result-block" style="margin-bottom: 12px;">
-                <div class="result-label">Executed SQL</div>
-                <div class="result-value sql">${escapeHtml(executedSql)}</div>
-            </div>` : '';
-
-            const tableHtml = `
-                ${isMock ? '<div style="color: var(--muted-foreground); font-size: 0.75rem; margin-bottom: 10px;">(Demo data - demo server not running)</div>' : ''}
-                ${sqlInfo}
-                <div class="db-table-wrapper">
-                    <table class="db-table">
-                        <thead>
-                            <tr>${columns.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr>
-                        </thead>
-                        <tbody>
-                            ${rows.slice(0, 100).map(row => `
-                                <tr>${columns.map(c => `<td title="${escapeHtml(String(row[c] ?? ''))}">${escapeHtml(String(row[c] ?? ''))}</td>`).join('')}</tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="db-count"><span>${count}</span> rows returned in ${latency}ms${rows.length > 100 ? ' (showing first 100)' : ''}</div>
-            `;
-
-            document.getElementById('dbResultsMain').innerHTML = tableHtml;
-        }
-
-        function showDbError(message) {
-            document.getElementById('dbResultsMain').innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
-        }
-
-        function showLoading() {
-            document.getElementById('translationResults').innerHTML = '<div class="placeholder">Translating...</div>';
-        }
-
-        function showResults(query, data) {
-            let paramsHtml = '';
-            if (data.parameters && data.parameters.length > 0) {
-                paramsHtml = data.parameters.map((p, i) =>
-                    `<div class="param-item"><span class="param-index">$${i + 1}</span><span class="param-value">${JSON.stringify(p)}</span><span class="param-type">${data.parameterTypes[i]}</span></div>`
-                ).join('');
+        function renderResultsTable(thead, tbody, rows) {
+            if (rows && rows.length > 0) {
+                const columns = Object.keys(rows[0]);
+                thead.innerHTML = '<tr>' + columns.map(col => `<th>${escapeHtml(col)}</th>`).join('') + '</tr>';
+                tbody.innerHTML = rows.map(row => {
+                    return '<tr>' + columns.map(col => {
+                        let value = row[col];
+                        let cellClass = '';
+                        if (value === null) {
+                            value = '<span style="color: var(--muted-foreground); font-style: italic;">null</span>';
+                        } else if (typeof value === 'object') {
+                            value = escapeHtml(JSON.stringify(value));
+                            cellClass = 'json-cell';
+                        } else if (typeof value === 'boolean') {
+                            value = value ? '<span style="color: var(--success);">true</span>' : '<span style="color: var(--error);">false</span>';
+                        } else {
+                            value = escapeHtml(String(value));
+                        }
+                        return `<td class="${cellClass}" title="${escapeHtml(String(row[col]))}">${value}</td>`;
+                    }).join('') + '</tr>';
+                }).join('');
             } else {
-                paramsHtml = '<span style="color: var(--muted-foreground)">No parameters</span>';
+                thead.innerHTML = '';
+                tbody.innerHTML = '<tr><td class="results-loading">No results found</td></tr>';
+            }
+        }
+
+        function showResultsTab(db) {
+            document.querySelectorAll('.db-result-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.db-result-tab[data-db="${db}"]`).classList.add('active');
+            document.querySelectorAll('.results-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`results-${db}`).classList.add('active');
+        }
+
+        // Translation
+        async function translateQuery() {
+            const query = document.getElementById('query-input').value.trim();
+            if (!query) {
+                resetOutputs();
+                return;
             }
 
-            document.getElementById('translationResults').innerHTML = `
-                <div class="result-block">
-                    <div class="result-label">Input Query</div>
-                    <div class="result-value">${escapeHtml(query)}</div>
-                </div>
-                <div class="result-block">
-                    <div class="result-label">SQL WHERE Clause</div>
-                    <div class="result-value sql">${escapeHtml(data.whereClause)}</div>
-                </div>
-                <div class="result-block">
-                    <div class="result-label">Full SQL</div>
-                    <div class="result-value sql">SELECT * FROM products WHERE ${escapeHtml(data.whereClause)}</div>
-                </div>
-                <div class="result-block">
-                    <div class="result-label">Parameters</div>
-                    <div class="result-value">${paramsHtml}</div>
-                </div>
-            `;
+            const schemaName = document.getElementById('schema-select').value;
+            const databases = ['postgres', 'mysql', 'sqlite', 'mongodb'];
+            const results = {};
+
+            document.getElementById('error-display').style.display = 'none';
+
+            const promises = databases.map(async (db) => {
+                try {
+                    const response = await fetch(`${API_BASE}/api/v1/translate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query, schema: schemaName, database: db })
+                    });
+                    const data = await response.json();
+                    results[db] = { success: response.ok, data };
+                } catch (error) {
+                    results[db] = { success: false, error: error.message };
+                }
+            });
+
+            await Promise.all(promises);
+            displayResults(results);
         }
 
-        function showIntegration(query, data) {
-            const jsCode = `<span class="code-comment">// JavaScript/Node.js</span>
-<span class="code-keyword">const</span> { whereClause, parameters } = <span class="code-keyword">await</span> fetch(<span class="code-string">'${API_URL}/api/v1/translate'</span>, {
-  method: <span class="code-string">'POST'</span>,
-  headers: { <span class="code-string">'Content-Type'</span>: <span class="code-string">'application/json'</span> },
-  body: JSON.stringify({ schema: <span class="code-string">'products'</span>, database: <span class="code-string">'postgres'</span>, query: <span class="code-string">'${escapeHtml(query)}'</span> })
-}).then(r => r.json());
+        function displayResults(results) {
+            let allHtml = '<div class="fade-in">';
+            const dbNames = { postgres: 'PostgreSQL', mysql: 'MySQL', sqlite: 'SQLite', mongodb: 'MongoDB' };
+            const dbClasses = { postgres: 'db-postgres', mysql: 'db-mysql', sqlite: 'db-sqlite', mongodb: 'db-mongodb' };
 
-<span class="code-keyword">const</span> rows = <span class="code-keyword">await</span> db.query(<span class="code-string">\`SELECT * FROM products WHERE \${whereClause}\`</span>, parameters);`;
+            for (const [db, result] of Object.entries(results)) {
+                allHtml += `<div class="db-result">`;
+                allHtml += `<div class="db-result-header"><span class="db-badge ${dbClasses[db]}">${dbNames[db]}</span></div>`;
 
-            const pythonCode = `<span class="code-comment"># Python</span>
-<span class="code-keyword">import</span> requests
-result = requests.post(<span class="code-string">'${API_URL}/api/v1/translate'</span>, json={
-    <span class="code-string">'schema'</span>: <span class="code-string">'products'</span>, <span class="code-string">'database'</span>: <span class="code-string">'postgres'</span>, <span class="code-string">'query'</span>: <span class="code-string">'${escapeHtml(query)}'</span>
-}).json()
+                // API returns: whereClause for SQL, filter for MongoDB
+                const hasSQL = result.success && result.data.whereClause;
+                const hasMongo = result.success && result.data.filter;
 
-cursor.execute(<span class="code-string">f"SELECT * FROM products WHERE {result['whereClause']}"</span>, result[<span class="code-string">'parameters'</span>])`;
+                if (hasSQL || hasMongo) {
+                    if (db === 'mongodb' && hasMongo) {
+                        allHtml += `<pre class="code-block"><code class="language-json">${escapeHtml(JSON.stringify(result.data.filter, null, 2))}</code></pre>`;
+                    } else if (hasSQL) {
+                        allHtml += `<pre class="code-block sql"><code class="language-sql">${escapeHtml(result.data.whereClause)}</code></pre>`;
+                        if (result.data.parameters && result.data.parameters.length > 0) {
+                            allHtml += `<div class="params">Parameters: ${JSON.stringify(result.data.parameters)}</div>`;
+                        }
+                    }
+                } else {
+                    const error = result.data?.error || result.error || 'Translation failed';
+                    allHtml += `<div class="error">${escapeHtml(error)}</div>`;
+                }
+                allHtml += `</div>`;
 
-            document.getElementById('integrationCode').innerHTML = `
-                <div class="result-block">
-                    <div class="result-label">JavaScript</div>
-                    <div class="result-value code">${jsCode}</div>
-                </div>
-                <div class="result-block">
-                    <div class="result-label">Python</div>
-                    <div class="result-value code">${pythonCode}</div>
-                </div>
-            `;
-        }
+                // Individual DB output
+                let singleHtml = '<div class="fade-in">';
+                if (hasSQL || hasMongo) {
+                    if (db === 'mongodb' && hasMongo) {
+                        singleHtml += `<pre class="code-block"><code class="language-json">${escapeHtml(JSON.stringify(result.data.filter, null, 2))}</code></pre>`;
+                    } else if (hasSQL) {
+                        singleHtml += `<pre class="code-block sql"><code class="language-sql">${escapeHtml(result.data.whereClause)}</code></pre>`;
+                        if (result.data.parameters && result.data.parameters.length > 0) {
+                            singleHtml += `<div style="margin-top: 16px;"><strong style="font-size: 0.8rem; color: var(--muted-foreground);">Parameters</strong><pre class="code-block" style="margin-top: 8px;"><code class="language-json">${escapeHtml(JSON.stringify(result.data.parameters, null, 2))}</code></pre></div>`;
+                        }
+                    }
+                } else {
+                    const error = result.data?.error || result.error || 'Translation failed';
+                    singleHtml += `<div class="error">${escapeHtml(error)}</div>`;
+                }
+                singleHtml += '</div>';
+                document.getElementById(`output-${db}`).innerHTML = singleHtml;
+            }
 
-        function showError(message) {
-            document.getElementById('translationResults').innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+            allHtml += '</div>';
+            document.getElementById('output-all').innerHTML = allHtml;
+
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
         }
 
         function escapeHtml(text) {
@@ -1343,34 +1544,198 @@ cursor.execute(<span class="code-string">f"SELECT * FROM products WHERE {result[
             return div.innerHTML;
         }
 
-        function clearQuery() {
-            document.getElementById('queryInput').value = '';
-            document.getElementById('translationResults').innerHTML = '<div class="placeholder">Enter a query above or click an example</div>';
-            document.getElementById('integrationCode').innerHTML = '<div class="placeholder">Translate a query to see integration examples</div>';
-            document.getElementById('dbResultsMain').innerHTML = '<div class="placeholder">Click "Execute" to run query against database</div>';
-            lastResult = null;
-            lastTranslation = null;
-        }
-
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
-            });
+        // Auto-translate on input
+        document.getElementById('query-input').addEventListener('input', () => {
+            if (document.getElementById('auto-translate').checked) {
+                clearTimeout(translateTimeout);
+                translateTimeout = setTimeout(translateQuery, 300);
+            }
         });
 
-        document.getElementById('translateBtn').addEventListener('click', translateQuery);
-        document.getElementById('executeBtn').addEventListener('click', executeQuery);
-        document.getElementById('clearBtn').addEventListener('click', clearQuery);
+        // Schema Management
+        async function refreshSchemas() {
+            const schemaList = document.getElementById('schema-list');
+            schemaList.innerHTML = '<p class="placeholder">Loading...</p>';
 
-        renderExampleQueries();
-        renderSyntaxReference();
-        checkServerStatus();
-        setupAutocomplete();
-        setInterval(checkServerStatus, 10000);
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/schemas/products`);
+                if (response.ok) {
+                    const schema = await response.json();
+                    displaySchemaList([schema]);
+                } else {
+                    schemaList.innerHTML = '<p class="placeholder">No schemas registered. Click "Load Default" to add one.</p>';
+                }
+            } catch (error) {
+                schemaList.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        function displaySchemaList(schemas) {
+            const schemaList = document.getElementById('schema-list');
+            if (schemas.length === 0) {
+                schemaList.innerHTML = '<p class="placeholder">No schemas registered</p>';
+                return;
+            }
+
+            let html = '';
+            for (const schema of schemas) {
+                const fieldCount = Object.keys(schema.fields || {}).length;
+                html += `
+                    <div class="example-card" onclick='viewSchema(${JSON.stringify(schema).replace(/'/g, "\\'")})'>
+                        <code>${escapeHtml(schema.name)}</code>
+                        <p>${fieldCount} fields: ${Object.keys(schema.fields || {}).slice(0, 5).join(', ')}${fieldCount > 5 ? '...' : ''}</p>
+                    </div>
+                `;
+            }
+            schemaList.innerHTML = html;
+        }
+
+        function viewSchema(schema) {
+            document.getElementById('schema-editor').value = JSON.stringify(schema, null, 2);
+        }
+
+        function loadDefaultSchema() {
+            document.getElementById('schema-editor').value = JSON.stringify(DEFAULT_SCHEMA, null, 2);
+        }
+
+        async function registerSchema() {
+            const schemaText = document.getElementById('schema-editor').value;
+            try {
+                JSON.parse(schemaText);
+            } catch (e) {
+                alert('Invalid JSON: ' + e.message);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/schemas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: schemaText
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Schema registered successfully!');
+                    refreshSchemas();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to register schema'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // API Explorer
+        async function sendApiRequest() {
+            const method = document.getElementById('api-method').value;
+            const endpoint = document.getElementById('api-endpoint').value;
+            const body = document.getElementById('api-body').value;
+
+            const statusEl = document.getElementById('api-status');
+            const responseEl = document.getElementById('api-response');
+
+            statusEl.textContent = 'Sending...';
+            statusEl.style.color = '#eab308';
+
+            try {
+                const options = {
+                    method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
+                if (method !== 'GET' && body.trim()) {
+                    options.body = body;
+                }
+
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const duration = Date.now() - startTime;
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+
+                statusEl.textContent = `${response.status} ${response.statusText} (${duration}ms)`;
+                statusEl.style.color = response.ok ? 'var(--success)' : 'var(--error)';
+
+                const formatted = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                responseEl.innerHTML = `<code class="language-json">${escapeHtml(formatted)}</code>`;
+                hljs.highlightElement(responseEl.querySelector('code'));
+            } catch (error) {
+                statusEl.textContent = 'Error';
+                statusEl.style.color = 'var(--error)';
+                responseEl.innerHTML = `<code style="color: var(--error);">${escapeHtml(error.message)}</code>`;
+            }
+        }
+
+        document.getElementById('api-endpoint').addEventListener('change', (e) => {
+            const endpoint = e.target.value;
+            const methodEl = document.getElementById('api-method');
+            const bodyEl = document.getElementById('api-body');
+
+            if (endpoint.includes('/translate')) {
+                methodEl.value = 'POST';
+                bodyEl.value = JSON.stringify({
+                    query: "name:laptop AND price:[100 TO 500]",
+                    schema: "products",
+                    database: "postgres"
+                }, null, 2);
+            } else if (endpoint === '/api/v1/schemas') {
+                methodEl.value = 'POST';
+                bodyEl.value = JSON.stringify(DEFAULT_SCHEMA, null, 2);
+            } else if (endpoint.includes('/schemas/')) {
+                methodEl.value = 'GET';
+                bodyEl.value = '';
+            } else {
+                methodEl.value = 'GET';
+                bodyEl.value = '';
+            }
+        });
+
+        // Status Check
+        async function checkStatus() {
+            const indicator = document.getElementById('status-indicator');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    indicator.innerHTML = '<span class="status-dot connected"></span><span style="color: var(--success);">Connected</span>';
+                } else {
+                    indicator.innerHTML = '<span class="status-dot error"></span><span style="color: var(--error);">Degraded</span>';
+                }
+            } catch (error) {
+                indicator.innerHTML = '<span class="status-dot error"></span><span style="color: var(--error);">Disconnected</span>';
+            }
+        }
+
+        // Auto-register default schema if not exists
+        async function ensureDefaultSchema() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/schemas/products`);
+                if (!response.ok) {
+                    // Schema doesn't exist, register it
+                    await fetch(`${API_BASE}/api/v1/schemas`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(DEFAULT_SCHEMA)
+                    });
+                    console.log('Default schema auto-registered');
+                }
+            } catch (error) {
+                console.warn('Could not auto-register schema:', error.message);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkStatus();
+            await ensureDefaultSchema();
+            refreshSchemas();
+            loadDefaultSchema();
+            setInterval(checkStatus, 30000);
+        });
     </script>
 </body>
 </html>
