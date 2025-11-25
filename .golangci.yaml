@@ -35,6 +35,9 @@ linters:
       exclude-functions:
         - (io.Closer).Close
         - (*os.File).Close
+        - (*encoding/json.Encoder).Encode
+        - encoding/json.MarshalIndent
+        - (*github.com/infiniv/rsearch/internal/translator.Registry).Register
 
     govet:
       enable-all: true
