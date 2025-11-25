@@ -1,0 +1,107 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this bug! Please fill out the sections below.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what went wrong
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Send query '...'
+        2. With schema '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Expected result
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Actual result
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: rsearch Version
+      description: What version are you running?
+      placeholder: v1.0.0 or commit hash
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Method
+      description: How are you running rsearch?
+      options:
+        - Docker
+        - Binary
+        - From source
+        - Kubernetes
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: go-version
+    attributes:
+      label: Go Version (if building from source)
+      description: Output of `go version`
+      placeholder: go version go1.21.0 linux/amd64
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS are you using?
+      placeholder: Ubuntu 22.04, macOS 13, Windows 11
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: Please paste any relevant log output
+      render: shell
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: Relevant configuration (remove sensitive data)
+      render: yaml
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here

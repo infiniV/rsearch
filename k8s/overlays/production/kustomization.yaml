@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: rsearch-production
+
+# Reference base manifests
+resources:
+  - ../../
+
+# Production-specific patches
+patchesStrategicMerge:
+  - replicas-patch.yaml
+  - resources-patch.yaml
+
+# Production image with specific version tag
+images:
+  - name: rsearch
+    newName: your-registry.io/rsearch
+    newTag: v1.0.0
+
+# Production-specific config
+configMapGenerator:
+  - name: rsearch-config
+    behavior: merge
+    literals:
+      - RSEARCH_LOGGING_LEVEL=info
+      - RSEARCH_METRICS_ENABLED=true
+      - RSEARCH_LIMITS_RATELIMIT_REQUESTSPERMINUTE=5000
+      - RSEARCH_LIMITS_RATELIMIT_REQUESTSPERHOUR=200000
+
+# Production labels
+commonLabels:
+  environment: production
+  managed-by: kustomize
+
+commonAnnotations:
+  deployment.kubernetes.io/revision: "1"

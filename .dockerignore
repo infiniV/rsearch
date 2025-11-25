@@ -1,0 +1,65 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Build artifacts
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files and data
+tests/
+testdata/
+*_test.go
+*.test
+
+# Documentation (except README)
+*.md
+!README.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (demo)
+examples/node_modules/
+node_modules/
+
+# Development files
+docker-compose.dev.yaml
+.demo-server.pid
+.rsearch.pid
+.go-env
+
+# Temporary files
+*.log
+*.tmp
+tmp/
+temp/
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Vendor directory (if using vendor)
+vendor/
+
+# Coverage reports
+*.out
+coverage.html
+
+# Local configuration
+config.yaml
+.env
+.env.local

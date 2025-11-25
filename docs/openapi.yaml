@@ -1,0 +1,625 @@
+openapi: 3.0.3
+info:
+  title: rsearch API
+  description: |
+    rsearch is a production-grade query translation service that converts OpenSearch/Elasticsearch-style
+    query strings into database-specific formats. It acts as a lightweight bridge between application
+    search UIs and databases.
+
+    **Core flow:** Query string -> Parser -> AST -> Translator -> WHERE clause + parameters
+
+    ## Features
+    - OpenSearch/Elasticsearch-compatible query syntax
+    - PostgreSQL translation with parameterized queries
+    - Schema registry for field mapping and validation
+    - Support for complex boolean logic, ranges, wildcards, and more
+    - Optional fuzzy search, proximity search, and regex support
+    - Built-in rate limiting and metrics
+
+  version: 1.0.0
+  contact:
+    name: rsearch
+    url: https://github.com/infiniv/rsearch
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.example.com
+    description: Production server
+
+tags:
+  - name: Translation
+    description: Query translation operations
+  - name: Schema Management
+    description: Schema registration and management
+  - name: Health
+    description: Health and monitoring endpoints
+
+paths:
+  /api/v1/translate:
+    post:
+      summary: Translate query string
+      description: |
+        Translates an OpenSearch/Elasticsearch query string into a database-specific format.
+        Requires a registered schema and supported database type.
+      tags:
+        - Translation
+      operationId: translateQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslateRequest'
+            examples:
+              simpleQuery:
+                summary: Simple field query
+                value:
+                  schema: users
+                  database: postgres
+                  query: "status:active AND age:>18"
+              complexQuery:
+                summary: Complex boolean query
+                value:
+                  schema: products
+                  database: postgres
+                  query: "(name:laptop OR category:electronics) AND price:[100 TO 1000]"
+              wildcardQuery:
+                summary: Wildcard query
+                value:
+                  schema: users
+                  database: postgres
+                  query: "email:*@example.com"
+              rangeQuery:
+                summary: Range query
+                value:
+                  schema: orders
+                  database: postgres
+                  query: "createdAt:[2024-01-01 TO 2024-12-31] AND total:>=100"
+      responses:
+        '200':
+          description: Successfully translated query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslateResponse'
+              examples:
+                success:
+                  summary: Successful translation
+                  value:
+                    type: postgres
+                    whereClause: "status = $1 AND age > $2"
+                    parameters: ["active", 18]
+                    parameterTypes: ["text", "integer"]
+        '400':
+          description: Bad request (invalid query, schema, or database)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                parseError:
+                  summary: Query parsing error
+                  value:
+                    error:
+                      code: PARSE_ERROR
+                      message: "Failed to parse query: unexpected token at position 10"
+                      query: "status:active AND"
+                fieldNotFound:
+                  summary: Field not found in schema
+                  value:
+                    error:
+                      code: FIELD_NOT_FOUND
+                      message: "Field 'unknownField' not found in schema 'users'"
+        '404':
+          description: Schema not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                schemaNotFound:
+                  summary: Schema not found
+                  value:
+                    error:
+                      code: SCHEMA_NOT_FOUND
+                      message: "Schema not found: users"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimited:
+                  summary: Rate limit exceeded
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: "Rate limit exceeded. Please try again later."
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/schemas:
+    post:
+      summary: Register a new schema
+      description: |
+        Registers a new schema in the registry. Schemas define the fields available
+        for querying and their types, along with configuration options.
+      tags:
+        - Schema Management
+      operationId: registerSchema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schema'
+            examples:
+              basicSchema:
+                summary: Basic schema
+                value:
+                  name: users
+                  fields:
+                    id:
+                      type: integer
+                      indexed: true
+                    email:
+                      type: text
+                      indexed: true
+                    status:
+                      type: text
+                    createdAt:
+                      type: datetime
+                  options:
+                    namingConvention: snake_case
+                    strictFieldNames: false
+                    defaultField: email
+              advancedSchema:
+                summary: Advanced schema with features
+                value:
+                  name: products
+                  fields:
+                    productId:
+                      type: integer
+                      column: product_id
+                      indexed: true
+                    productName:
+                      type: text
+                      column: product_name
+                      aliases: ["name", "title"]
+                    price:
+                      type: float
+                      indexed: true
+                    category:
+                      type: text
+                    tags:
+                      type: array
+                  options:
+                    namingConvention: snake_case
+                    strictFieldNames: false
+                    defaultField: productName
+                    enabledFeatures:
+                      fuzzy: true
+                      proximity: true
+                      regex: true
+      responses:
+        '201':
+          description: Schema registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                success:
+                  summary: Schema registered
+                  value:
+                    message: "schema registered successfully"
+                    data:
+                      name: users
+                      fields:
+                        email:
+                          type: text
+                          indexed: true
+        '400':
+          description: Invalid schema definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidSchema:
+                  summary: Invalid schema
+                  value:
+                    error:
+                      code: INVALID_SCHEMA
+                      message: "Schema validation failed: name is required"
+        '409':
+          description: Schema already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List all schemas
+      description: Returns a list of all registered schema names.
+      tags:
+        - Schema Management
+      operationId: listSchemas
+      responses:
+        '200':
+          description: List of schemas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                success:
+                  summary: Schema list
+                  value:
+                    data: ["users", "products", "orders"]
+
+  /api/v1/schemas/{name}:
+    get:
+      summary: Get schema by name
+      description: Retrieves a specific schema by name.
+      tags:
+        - Schema Management
+      operationId: getSchema
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Schema name
+          schema:
+            type: string
+          example: users
+      responses:
+        '200':
+          description: Schema details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schema'
+        '404':
+          description: Schema not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete schema
+      description: Removes a schema from the registry.
+      tags:
+        - Schema Management
+      operationId: deleteSchema
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Schema name
+          schema:
+            type: string
+          example: users
+      responses:
+        '204':
+          description: Schema deleted successfully
+        '404':
+          description: Schema not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      summary: Health check
+      description: Returns the health status of the service.
+      tags:
+        - Health
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                version: 1.0.0
+
+  /ready:
+    get:
+      summary: Readiness check
+      description: Returns whether the service is ready to accept requests.
+      tags:
+        - Health
+      operationId: readinessCheck
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                  version:
+                    type: string
+              example:
+                ready: true
+                version: 1.0.0
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: |
+        Returns Prometheus-formatted metrics. Only available when metrics are enabled
+        via configuration (RSEARCH_METRICS_ENABLED=true).
+      tags:
+        - Health
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              example: |
+                # HELP rsearch_requests_total Total HTTP requests
+                # TYPE rsearch_requests_total counter
+                rsearch_requests_total{endpoint="/api/v1/translate",status="200"} 150
+        '404':
+          description: Metrics not enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    TranslateRequest:
+      type: object
+      required:
+        - schema
+        - database
+        - query
+      properties:
+        schema:
+          type: string
+          description: Name of the registered schema to use
+          example: users
+        database:
+          type: string
+          description: Target database type
+          enum: [postgres]
+          example: postgres
+        query:
+          type: string
+          description: OpenSearch/Elasticsearch query string
+          example: "status:active AND age:>18"
+
+    TranslateResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Database type
+          example: postgres
+        whereClause:
+          type: string
+          description: Generated WHERE clause (without the WHERE keyword)
+          example: "status = $1 AND age > $2"
+        parameters:
+          type: array
+          description: Query parameters in order
+          items:
+            type: object
+          example: ["active", 18]
+        parameterTypes:
+          type: array
+          description: Parameter types for proper casting
+          items:
+            type: string
+          example: ["text", "integer"]
+        filter:
+          type: object
+          description: Optional filter object for NoSQL databases
+          nullable: true
+
+    Schema:
+      type: object
+      required:
+        - name
+        - fields
+      properties:
+        name:
+          type: string
+          description: Unique schema name
+          example: users
+        fields:
+          type: object
+          description: Field definitions
+          additionalProperties:
+            $ref: '#/components/schemas/Field'
+        options:
+          $ref: '#/components/schemas/SchemaOptions'
+        createdAt:
+          type: string
+          format: date-time
+          description: Schema creation timestamp
+          readOnly: true
+
+    Field:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Field data type
+          enum: [text, integer, float, boolean, datetime, date, time, json, array]
+          example: text
+        column:
+          type: string
+          description: Optional explicit column name override
+          example: email_address
+        indexed:
+          type: boolean
+          description: Whether the field is indexed (hint for optimization)
+          default: false
+        aliases:
+          type: array
+          description: Alternative field names
+          items:
+            type: string
+          example: ["mail", "emailAddress"]
+
+    SchemaOptions:
+      type: object
+      properties:
+        namingConvention:
+          type: string
+          description: Field name transformation convention
+          enum: [snake_case, camelCase, PascalCase, none]
+          default: snake_case
+          example: snake_case
+        strictOperators:
+          type: boolean
+          description: Whether operators (AND/OR/NOT) are case-sensitive
+          default: false
+        strictFieldNames:
+          type: boolean
+          description: Whether field names are case-sensitive
+          default: false
+        defaultField:
+          type: string
+          description: Default field for queries without field specifier
+          example: email
+        enabledFeatures:
+          $ref: '#/components/schemas/EnabledFeatures'
+
+    EnabledFeatures:
+      type: object
+      properties:
+        fuzzy:
+          type: boolean
+          description: Enable fuzzy search (requires pg_trgm for PostgreSQL)
+          default: false
+        proximity:
+          type: boolean
+          description: Enable proximity search (requires full-text search setup)
+          default: false
+        regex:
+          type: boolean
+          description: Enable regex search
+          default: false
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: "schema registered successfully"
+        data:
+          type: object
+          description: Response data
+          additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+
+    ErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+          enum:
+            - PARSE_ERROR
+            - SCHEMA_NOT_FOUND
+            - FIELD_NOT_FOUND
+            - TYPE_MISMATCH
+            - FEATURE_DISABLED
+            - INVALID_RANGE
+            - UNSUPPORTED_SYNTAX
+            - SCHEMA_EXISTS
+            - INVALID_SCHEMA
+            - INTERNAL_ERROR
+            - RATE_LIMITED
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - QUERY_TOO_LONG
+            - TOO_MANY_PARAMETERS
+            - TIMEOUT
+            - SERVICE_UNAVAILABLE
+          example: PARSE_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Failed to parse query: unexpected token"
+        details:
+          type: array
+          description: Additional error details
+          items:
+            $ref: '#/components/schemas/ErrorInfo'
+        query:
+          type: string
+          description: Original query string (for parsing errors)
+          example: "status:active AND"
+
+    ErrorInfo:
+      type: object
+      properties:
+        position:
+          type: integer
+          description: Character position in query
+        line:
+          type: integer
+          description: Line number
+        column:
+          type: integer
+          description: Column number
+        message:
+          type: string
+          description: Specific error message
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          example: healthy
+        version:
+          type: string
+          example: 1.0.0
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Optional API key authentication. Enable via configuration:
+        RSEARCH_SECURITY_AUTH_ENABLED=true
+        RSEARCH_SECURITY_AUTH_TYPE=apikey
+        RSEARCH_SECURITY_AUTH_APIKEYS=key1,key2
+
+security: []

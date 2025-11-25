@@ -1,0 +1,20 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: rsearch
+  namespace: rsearch
+  labels:
+    app.kubernetes.io/name: rsearch
+    app.kubernetes.io/component: availability
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rsearch
+      app.kubernetes.io/component: api
+
+  # Alternative: use maxUnavailable instead
+  # maxUnavailable: 1
+
+  # Unhealthy pod eviction policy (Kubernetes 1.26+)
+  unhealthyPodEvictionPolicy: IfHealthyBudget

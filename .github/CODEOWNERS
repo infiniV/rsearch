@@ -1,0 +1,37 @@
+# CODEOWNERS file for rsearch
+# This file defines individuals or teams responsible for code in this repository.
+# Code owners are automatically requested for review when someone opens a pull request
+# that modifies code that they own.
+
+# Default owners for everything in the repo
+# These owners will be the default owners for everything in the repo.
+# Unless a later match takes precedence, @infiniv will be requested for review.
+*                                   @infiniv
+
+# Core functionality
+/internal/parser/                   @infiniv
+/internal/translator/               @infiniv
+/internal/schema/                   @infiniv
+/internal/api/                      @infiniv
+
+# Documentation
+*.md                                @infiniv
+/docs/                              @infiniv
+
+# CI/CD and Infrastructure
+/.github/                           @infiniv
+/scripts/                           @infiniv
+Makefile                            @infiniv
+Dockerfile                          @infiniv
+docker-compose*.yaml                @infiniv
+
+# Configuration
+*.yaml                              @infiniv
+*.yml                               @infiniv
+go.mod                              @infiniv
+go.sum                              @infiniv
+
+# Tests
+*_test.go                           @infiniv
+/tests/                             @infiniv
+/testdata/                          @infiniv

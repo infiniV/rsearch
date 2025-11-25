@@ -1,0 +1,73 @@
+version: 2
+updates:
+  # Maintain dependencies for Go modules
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "infiniv"
+    labels:
+      - "dependencies"
+      - "go"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      # Group Go standard library updates
+      go-stdlib:
+        patterns:
+          - "golang.org/x/*"
+      # Group testing libraries
+      testing:
+        patterns:
+          - "github.com/stretchr/testify"
+          - "github.com/golang/mock"
+      # Group observability libraries
+      observability:
+        patterns:
+          - "github.com/prometheus/*"
+          - "github.com/rs/zerolog"
+          - "go.opentelemetry.io/*"
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "infiniv"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+    groups:
+      # Group GitHub Actions updates
+      github-actions:
+        patterns:
+          - "*"
+
+  # Maintain dependencies for Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "infiniv"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"

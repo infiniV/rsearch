@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rsearch
+  namespace: rsearch
+  labels:
+    app.kubernetes.io/name: rsearch
+    app.kubernetes.io/component: monitoring
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rsearch
+      app.kubernetes.io/component: api
+
+  namespaceSelector:
+    matchNames:
+      - rsearch
+
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      scheme: http
+
+      # Relabeling
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+
+      # Metric relabeling (optional - filter or transform metrics)
+      # metricRelabelings:
+      #   - sourceLabels: [__name__]
+      #     regex: 'go_.*'
+      #     action: drop

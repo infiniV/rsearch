@@ -1,0 +1,91 @@
+services:
+  rsearch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rsearch:latest
+    container_name: rsearch
+    ports:
+      - "8080:8080"
+      - "9090:9090"  # Metrics port
+    environment:
+      # Server configuration
+      - RSEARCH_SERVER_HOST=0.0.0.0
+      - RSEARCH_SERVER_PORT=8080
+      - RSEARCH_SERVER_READTIMEOUT=30s
+      - RSEARCH_SERVER_WRITETIMEOUT=30s
+      - RSEARCH_SERVER_SHUTDOWNTIMEOUT=10s
+
+      # Logging configuration
+      - RSEARCH_LOGGING_LEVEL=info
+      - RSEARCH_LOGGING_FORMAT=json
+      - RSEARCH_LOGGING_OUTPUT=stdout
+
+      # Metrics configuration
+      - RSEARCH_METRICS_ENABLED=true
+      - RSEARCH_METRICS_PORT=9090
+      - RSEARCH_METRICS_PATH=/metrics
+
+      # CORS configuration
+      - RSEARCH_CORS_ENABLED=false
+
+      # Limits configuration
+      - RSEARCH_LIMITS_MAXQUERYLENGTH=10000
+      - RSEARCH_LIMITS_MAXPARAMETERCOUNT=100
+      - RSEARCH_LIMITS_MAXPARSEDEPTH=50
+      - RSEARCH_LIMITS_MAXSCHEMAFIELDS=1000
+      - RSEARCH_LIMITS_MAXFIELDNAMELENGTH=255
+      - RSEARCH_LIMITS_MAXSCHEMAS=100
+      - RSEARCH_LIMITS_MAXREQUESTBODYSIZE=1048576
+      - RSEARCH_LIMITS_REQUESTTIMEOUT=30s
+
+      # Cache configuration
+      - RSEARCH_CACHE_ENABLED=true
+      - RSEARCH_CACHE_MAXSIZE=10000
+      - RSEARCH_CACHE_TTL=3600
+
+      # Security configuration
+      - RSEARCH_SECURITY_BLOCKSQLKEYWORDS=true
+    volumes:
+      # Optional: Mount schemas directory
+      - ./schemas:/app/schemas:ro
+    networks:
+      - rsearch-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: rsearch-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=rsearch
+      - POSTGRES_USER=rsearch
+      - POSTGRES_PASSWORD=rsearch123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rsearch-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rsearch"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  rsearch-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
