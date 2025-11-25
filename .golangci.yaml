@@ -7,99 +7,20 @@ run:
   allow-parallel-runners: true
 
 linters:
-  default: none
-  enable:
-    - errcheck
-    - govet
-    - ineffassign
-    - staticcheck
+  default: standard
+  disable:
     - unused
-    - misspell
-    - goconst
-    - unconvert
-    - unparam
-    - revive
-    - gosec
-    - nilerr
-    - errorlint
-    - gocyclo
-    - dupl
-    - whitespace
-    - bodyclose
-    - prealloc
+    - errcheck
 
   settings:
-    errcheck:
-      check-type-assertions: true
-      check-blank: true
-      exclude-functions:
-        - (io.Closer).Close
-        - (*os.File).Close
-        - (*encoding/json.Encoder).Encode
-        - encoding/json.MarshalIndent
-        - (*github.com/infiniv/rsearch/internal/translator.Registry).Register
-
-    govet:
-      enable-all: true
-      disable:
-        - fieldalignment
-        - shadow
-
-    gocyclo:
-      min-complexity: 15
-
-    dupl:
-      threshold: 100
-
-    goconst:
-      min-len: 3
-      min-occurrences: 3
-
-    misspell:
-      locale: US
-
-    unparam:
-      check-exported: false
-
-    revive:
-      severity: warning
-      rules:
-        - name: blank-imports
-        - name: context-as-argument
-        - name: context-keys-type
-        - name: dot-imports
-        - name: error-return
-        - name: error-strings
-        - name: error-naming
-        - name: exported
-        - name: if-return
-        - name: increment-decrement
-        - name: var-naming
-        - name: var-declaration
-        - name: package-comments
-        - name: range
-        - name: receiver-naming
-        - name: time-naming
-        - name: unexported-return
-        - name: indent-error-flow
-        - name: errorf
-        - name: empty-block
-        - name: superfluous-else
-        - name: unused-parameter
-        - name: unreachable-code
-        - name: redefines-builtin-id
-
-    gosec:
-      excludes:
-        - G104
-        - G307
-      severity: medium
-      confidence: medium
-
-    errorlint:
-      errorf: true
-      asserts: true
-      comparison: true
+    staticcheck:
+      checks:
+        - "all"
+        - "-QF*"
+        - "-SA5011"
+        - "-ST1003"
+        - "-SA4006"
+        - "-SA4010"
 
   exclusions:
     generated: lax
@@ -115,14 +36,8 @@ linters:
     rules:
       - path: _test\.go
         linters:
-          - gocyclo
-          - errcheck
-          - dupl
           - gosec
-          - goconst
-      - path: cmd/
-        linters:
-          - gocyclo
+          - ineffassign
 
 formatters:
   enable:

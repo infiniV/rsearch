@@ -16,10 +16,10 @@ type ErrorResponse struct {
 
 // ErrorDetail contains error information
 type ErrorDetail struct {
-	Code    string        `json:"code"`
-	Message string        `json:"message"`
-	Details []ErrorInfo   `json:"details,omitempty"`
-	Query   string        `json:"query,omitempty"`
+	Code    string      `json:"code"`
+	Message string      `json:"message"`
+	Details []ErrorInfo `json:"details,omitempty"`
+	Query   string      `json:"query,omitempty"`
 }
 
 // ErrorInfo contains detailed error information
@@ -32,21 +32,21 @@ type ErrorInfo struct {
 
 // Error codes
 const (
-	ErrorCodeParseError        = "PARSE_ERROR"
-	ErrorCodeSchemaNotFound    = "SCHEMA_NOT_FOUND"
-	ErrorCodeFieldNotFound     = "FIELD_NOT_FOUND"
-	ErrorCodeTypeMismatch      = "TYPE_MISMATCH"
-	ErrorCodeFeatureDisabled   = "FEATURE_DISABLED"
-	ErrorCodeInvalidRange      = "INVALID_RANGE"
-	ErrorCodeUnsupportedSyntax = "UNSUPPORTED_SYNTAX"
-	ErrorCodeSchemaExists      = "SCHEMA_EXISTS"
-	ErrorCodeInvalidSchema     = "INVALID_SCHEMA"
-	ErrorCodeInternalError     = "INTERNAL_ERROR"
-	ErrorCodeRateLimited       = "RATE_LIMITED"
-	ErrorCodeUnauthorized      = "UNAUTHORIZED"
-	ErrorCodeForbidden         = "FORBIDDEN"
-	ErrorCodeQueryTooLong      = "QUERY_TOO_LONG"
-	ErrorCodeTooManyParameters = "TOO_MANY_PARAMETERS"
-	ErrorCodeTimeout           = "TIMEOUT"
+	ErrorCodeParseError         = "PARSE_ERROR"
+	ErrorCodeSchemaNotFound     = "SCHEMA_NOT_FOUND"
+	ErrorCodeFieldNotFound      = "FIELD_NOT_FOUND"
+	ErrorCodeTypeMismatch       = "TYPE_MISMATCH"
+	ErrorCodeFeatureDisabled    = "FEATURE_DISABLED"
+	ErrorCodeInvalidRange       = "INVALID_RANGE"
+	ErrorCodeUnsupportedSyntax  = "UNSUPPORTED_SYNTAX"
+	ErrorCodeSchemaExists       = "SCHEMA_EXISTS"
+	ErrorCodeInvalidSchema      = "INVALID_SCHEMA"
+	ErrorCodeInternalError      = "INTERNAL_ERROR"
+	ErrorCodeRateLimited        = "RATE_LIMITED"
+	ErrorCodeUnauthorized       = "UNAUTHORIZED"
+	ErrorCodeForbidden          = "FORBIDDEN"
+	ErrorCodeQueryTooLong       = "QUERY_TOO_LONG"
+	ErrorCodeTooManyParameters  = "TOO_MANY_PARAMETERS"
+	ErrorCodeTimeout            = "TIMEOUT"
 	ErrorCodeServiceUnavailable = "SERVICE_UNAVAILABLE"
 )

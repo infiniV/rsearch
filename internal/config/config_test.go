@@ -70,9 +70,9 @@ func TestEnvironmentVariableOverrides(t *testing.T) {
 
 func TestConfigValidation(t *testing.T) {
 	tests := []struct {
-		name        string
+		name         string
 		modifyConfig func(*Config)
-		expectError bool
+		expectError  bool
 	}{
 		{
 			name: "valid config",

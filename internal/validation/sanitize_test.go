@@ -104,10 +104,10 @@ func TestSanitizeQuery(t *testing.T) {
 
 func TestSanitizeFieldName(t *testing.T) {
 	tests := []struct {
-		name               string
-		input              string
+		name                string
+		input               string
 		allowedSpecialChars string
-		expected           string
+		expected            string
 	}{
 		{
 			name:                "clean field name unchanged",

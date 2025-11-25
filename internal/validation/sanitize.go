@@ -31,9 +31,7 @@ func SanitizeQuery(query string) string {
 	}
 
 	// Remove block comments (/* */) - keep looping until all are removed (handles nested comments)
-	changed := true
-	for changed {
-		changed = false
+	for {
 		startIdx := strings.Index(query, "/*")
 		if startIdx == -1 {
 			break
@@ -47,7 +45,6 @@ func SanitizeQuery(query string) string {
 		}
 		// Remove the comment block (startIdx + 2 + endIdx + 2 for the */)
 		query = query[:startIdx] + query[startIdx+2+endIdx+2:]
-		changed = true
 	}
 
 	// Trim excessive whitespace

@@ -255,12 +255,12 @@ func TestValidateQuery(t *testing.T) {
 
 func TestValidateSchemaName(t *testing.T) {
 	tests := []struct {
-		name               string
-		schemaName         string
+		name                string
+		schemaName          string
 		allowedSpecialChars string
 		maxFieldNameLength  int
-		wantErr            bool
-		errContains        string
+		wantErr             bool
+		errContains         string
 	}{
 		{
 			name:                "valid schema name",
@@ -379,12 +379,12 @@ func TestValidateSchemaName(t *testing.T) {
 
 func TestValidateFieldName(t *testing.T) {
 	tests := []struct {
-		name               string
-		fieldName          string
+		name                string
+		fieldName           string
 		allowedSpecialChars string
 		maxFieldNameLength  int
-		wantErr            bool
-		errContains        string
+		wantErr             bool
+		errContains         string
 	}{
 		{
 			name:                "valid field name",

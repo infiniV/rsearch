@@ -141,10 +141,10 @@ func TestSchemaError(t *testing.T) {
 
 func TestTranslationError(t *testing.T) {
 	tests := []struct {
-		name     string
-		msg      string
-		field    string
-		wantMsg  string
+		name    string
+		msg     string
+		field   string
+		wantMsg string
 	}{
 		{
 			name:    "basic translation error",

@@ -68,8 +68,8 @@ func TestRegistry_RegisterInvalid(t *testing.T) {
 	registry := NewRegistry()
 
 	schema := &Schema{
-		Name:   "invalid",
-		Fields: map[string]Field{}, // Empty fields - invalid
+		Name:    "invalid",
+		Fields:  map[string]Field{}, // Empty fields - invalid
 		Options: SchemaOptions{},
 	}
 

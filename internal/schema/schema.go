@@ -25,9 +25,9 @@ const (
 // Field represents a schema field definition
 type Field struct {
 	Type    FieldType `json:"type"`
-	Column  string    `json:"column,omitempty"`   // Optional: explicit column name override
-	Indexed bool      `json:"indexed"`            // Hint for translators
-	Aliases []string  `json:"aliases,omitempty"`  // Alternative field names
+	Column  string    `json:"column,omitempty"`  // Optional: explicit column name override
+	Indexed bool      `json:"indexed"`           // Hint for translators
+	Aliases []string  `json:"aliases,omitempty"` // Alternative field names
 }
 
 // EnabledFeatures contains flags for optional database features
@@ -39,23 +39,23 @@ type EnabledFeatures struct {
 
 // SchemaOptions contains configuration options for a schema
 type SchemaOptions struct {
-	NamingConvention string           `json:"namingConvention"` // "snake_case", "camelCase", "PascalCase", "none"
-	StrictOperators  bool             `json:"strictOperators"`  // case-sensitive AND/OR/NOT
-	StrictFieldNames bool             `json:"strictFieldNames"` // case-sensitive field names
-	DefaultField     string           `json:"defaultField"`     // field for queries without field specifier
-	EnabledFeatures  EnabledFeatures  `json:"enabledFeatures"`  // Optional database features
+	NamingConvention string          `json:"namingConvention"` // "snake_case", "camelCase", "PascalCase", "none"
+	StrictOperators  bool            `json:"strictOperators"`  // case-sensitive AND/OR/NOT
+	StrictFieldNames bool            `json:"strictFieldNames"` // case-sensitive field names
+	DefaultField     string          `json:"defaultField"`     // field for queries without field specifier
+	EnabledFeatures  EnabledFeatures `json:"enabledFeatures"`  // Optional database features
 }
 
 // Schema represents a schema definition
 type Schema struct {
-	Name      string        `json:"name"`
+	Name      string           `json:"name"`
 	Fields    map[string]Field `json:"fields"`
-	Options   SchemaOptions `json:"options"`
-	CreatedAt time.Time     `json:"createdAt"`
+	Options   SchemaOptions    `json:"options"`
+	CreatedAt time.Time        `json:"createdAt"`
 
 	// Internal cache for fast lookups
-	lowerFieldMap map[string]string   // lowercase field name -> actual field name
-	aliasMap      map[string]string   // alias (normalized) -> field name
+	lowerFieldMap map[string]string // lowercase field name -> actual field name
+	aliasMap      map[string]string // alias (normalized) -> field name
 }
 
 // NewSchema creates a new schema with the given name and fields

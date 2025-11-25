@@ -46,15 +46,15 @@ func (p *Parser) Parse() (Node, error) {
 
 // Operator precedence (lowest to highest)
 const (
-	LOWEST int = iota
-	OR_PREC         // OR, ||
-	AND_PREC        // AND, &&
-	NOT_PREC        // NOT, !
-	REQUIRED_PREC   // +term, -term
-	FIELD_PREC      // field:value
-	BOOST_PREC      // ^
-	FUZZY_PREC      // ~
-	PREFIX          // highest
+	LOWEST        int = iota
+	OR_PREC           // OR, ||
+	AND_PREC          // AND, &&
+	NOT_PREC          // NOT, !
+	REQUIRED_PREC     // +term, -term
+	FIELD_PREC        // field:value
+	BOOST_PREC        // ^
+	FUZZY_PREC        // ~
+	PREFIX            // highest
 )
 
 // precedence returns the precedence of the current token

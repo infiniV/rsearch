@@ -44,9 +44,9 @@ func LoadSchemas(t *testing.T, path string) map[string]*schema.Schema {
 	require.NoError(t, err, "Failed to read schemas file")
 
 	var rawSchemas map[string]struct {
-		Name    string                    `json:"name"`
-		Fields  map[string]schema.Field   `json:"fields"`
-		Options schema.SchemaOptions      `json:"options"`
+		Name    string                  `json:"name"`
+		Fields  map[string]schema.Field `json:"fields"`
+		Options schema.SchemaOptions    `json:"options"`
 	}
 	err = json.Unmarshal(data, &rawSchemas)
 	require.NoError(t, err, "Failed to parse schemas JSON")

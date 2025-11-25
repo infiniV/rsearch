@@ -22,21 +22,21 @@ type Metrics struct {
 	CacheMisses       prometheus.Counter
 
 	// New metrics
-	QueryComplexity   *prometheus.HistogramVec
-	ParameterCount    *prometheus.HistogramVec
-	RateLimitHits     prometheus.Counter
-	ValidationErrors  *prometheus.CounterVec
-	SchemaOperations  *prometheus.CounterVec
-	QuerySyntaxUsage  *prometheus.CounterVec
-	ResponseSize      *prometheus.HistogramVec
-	DatabaseTargets   *prometheus.CounterVec
+	QueryComplexity  *prometheus.HistogramVec
+	ParameterCount   *prometheus.HistogramVec
+	RateLimitHits    prometheus.Counter
+	ValidationErrors *prometheus.CounterVec
+	SchemaOperations *prometheus.CounterVec
+	QuerySyntaxUsage *prometheus.CounterVec
+	ResponseSize     *prometheus.HistogramVec
+	DatabaseTargets  *prometheus.CounterVec
 
 	// System metrics
-	GoroutineCount    prometheus.Gauge
-	MemoryUsage       prometheus.Gauge
-	Uptime            prometheus.Gauge
+	GoroutineCount prometheus.Gauge
+	MemoryUsage    prometheus.Gauge
+	Uptime         prometheus.Gauge
 
-	startTime         int64
+	startTime int64
 }
 
 // NewMetrics creates and registers Prometheus metrics

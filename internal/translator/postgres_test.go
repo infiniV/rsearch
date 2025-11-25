@@ -1,8 +1,9 @@
 package translator
 
 import (
-        "github.com/infiniv/rsearch/internal/parser"
 	"testing"
+
+	"github.com/infiniv/rsearch/internal/parser"
 
 	"github.com/infiniv/rsearch/internal/schema"
 	"github.com/stretchr/testify/assert"

@@ -60,23 +60,23 @@ type SchemasConfig struct {
 
 // LimitsConfig holds various limits
 type LimitsConfig struct {
-	MaxQueryLength     int           `mapstructure:"maxQueryLength"`
-	MaxParameterCount  int           `mapstructure:"maxParameterCount"`
-	MaxParseDepth      int           `mapstructure:"maxParseDepth"`
-	MaxSchemaFields    int           `mapstructure:"maxSchemaFields"`
-	MaxFieldNameLength int           `mapstructure:"maxFieldNameLength"`
-	MaxSchemas         int           `mapstructure:"maxSchemas"`
-	MaxRequestBodySize int64         `mapstructure:"maxRequestBodySize"`
-	RequestTimeout     time.Duration `mapstructure:"requestTimeout"`
+	MaxQueryLength     int             `mapstructure:"maxQueryLength"`
+	MaxParameterCount  int             `mapstructure:"maxParameterCount"`
+	MaxParseDepth      int             `mapstructure:"maxParseDepth"`
+	MaxSchemaFields    int             `mapstructure:"maxSchemaFields"`
+	MaxFieldNameLength int             `mapstructure:"maxFieldNameLength"`
+	MaxSchemas         int             `mapstructure:"maxSchemas"`
+	MaxRequestBodySize int64           `mapstructure:"maxRequestBodySize"`
+	RequestTimeout     time.Duration   `mapstructure:"requestTimeout"`
 	RateLimit          RateLimitConfig `mapstructure:"rateLimit"`
 }
 
 // RateLimitConfig holds rate limiting configuration
 type RateLimitConfig struct {
-	Enabled            bool `mapstructure:"enabled"`
-	RequestsPerMinute  int  `mapstructure:"requestsPerMinute"`
-	RequestsPerHour    int  `mapstructure:"requestsPerHour"`
-	Burst              int  `mapstructure:"burst"`
+	Enabled           bool `mapstructure:"enabled"`
+	RequestsPerMinute int  `mapstructure:"requestsPerMinute"`
+	RequestsPerHour   int  `mapstructure:"requestsPerHour"`
+	Burst             int  `mapstructure:"burst"`
 }
 
 // CacheConfig holds cache configuration

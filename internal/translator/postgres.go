@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-        "github.com/infiniv/rsearch/internal/parser"
+	"github.com/infiniv/rsearch/internal/parser"
 	"github.com/infiniv/rsearch/internal/schema"
 )
 

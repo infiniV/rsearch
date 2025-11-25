@@ -190,10 +190,10 @@ func BenchmarkConcurrentTranslationsComplex(b *testing.B) {
 // BenchmarkPipelineWithFieldResolution benchmarks with different field naming patterns
 func BenchmarkPipelineWithFieldResolution(b *testing.B) {
 	queries := []string{
-		"productCode:13w42",        // camelCase (exact match)
-		"PRODUCTCODE:13w42",        // uppercase (case-insensitive)
-		"ProductCode:13w42",        // PascalCase (case-insensitive)
-		"productcode:13w42",        // lowercase (case-insensitive)
+		"productCode:13w42", // camelCase (exact match)
+		"PRODUCTCODE:13w42", // uppercase (case-insensitive)
+		"ProductCode:13w42", // PascalCase (case-insensitive)
+		"productcode:13w42", // lowercase (case-insensitive)
 	}
 
 	schema := testdata.GetBenchmarkSchema()

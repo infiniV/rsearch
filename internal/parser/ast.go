@@ -20,7 +20,7 @@ type BinaryOp struct {
 	Pos   Position
 }
 
-func (n *BinaryOp) Type() string     { return "BinaryOp" }
+func (n *BinaryOp) Type() string       { return "BinaryOp" }
 func (n *BinaryOp) Position() Position { return n.Pos }
 
 // UnaryOp represents a unary operation (NOT, !)
@@ -30,7 +30,7 @@ type UnaryOp struct {
 	Pos     Position
 }
 
-func (n *UnaryOp) Type() string     { return "UnaryOp" }
+func (n *UnaryOp) Type() string       { return "UnaryOp" }
 func (n *UnaryOp) Position() Position { return n.Pos }
 
 // RequiredQuery represents a required term (+term)
@@ -39,7 +39,7 @@ type RequiredQuery struct {
 	Pos   Position
 }
 
-func (n *RequiredQuery) Type() string     { return "RequiredQuery" }
+func (n *RequiredQuery) Type() string       { return "RequiredQuery" }
 func (n *RequiredQuery) Position() Position { return n.Pos }
 
 // ProhibitedQuery represents a prohibited term (-term)
@@ -48,7 +48,7 @@ type ProhibitedQuery struct {
 	Pos   Position
 }
 
-func (n *ProhibitedQuery) Type() string     { return "ProhibitedQuery" }
+func (n *ProhibitedQuery) Type() string       { return "ProhibitedQuery" }
 func (n *ProhibitedQuery) Position() Position { return n.Pos }
 
 // FieldQuery represents a field:value query
@@ -58,7 +58,7 @@ type FieldQuery struct {
 	Pos   Position
 }
 
-func (n *FieldQuery) Type() string     { return "FieldQuery" }
+func (n *FieldQuery) Type() string       { return "FieldQuery" }
 func (n *FieldQuery) Position() Position { return n.Pos }
 
 // FieldGroupQuery represents field:(a OR b)
@@ -68,7 +68,7 @@ type FieldGroupQuery struct {
 	Pos     Position
 }
 
-func (n *FieldGroupQuery) Type() string     { return "FieldGroupQuery" }
+func (n *FieldGroupQuery) Type() string       { return "FieldGroupQuery" }
 func (n *FieldGroupQuery) Position() Position { return n.Pos }
 
 // RangeQuery represents a range query [start TO end] or {start TO end}
@@ -81,7 +81,7 @@ type RangeQuery struct {
 	Pos            Position
 }
 
-func (n *RangeQuery) Type() string     { return "RangeQuery" }
+func (n *RangeQuery) Type() string       { return "RangeQuery" }
 func (n *RangeQuery) Position() Position { return n.Pos }
 
 // FuzzyQuery represents a fuzzy search (term~distance)
@@ -92,7 +92,7 @@ type FuzzyQuery struct {
 	Pos      Position
 }
 
-func (n *FuzzyQuery) Type() string     { return "FuzzyQuery" }
+func (n *FuzzyQuery) Type() string       { return "FuzzyQuery" }
 func (n *FuzzyQuery) Position() Position { return n.Pos }
 
 // ProximityQuery represents a proximity search ("phrase"~distance)
@@ -103,7 +103,7 @@ type ProximityQuery struct {
 	Pos      Position
 }
 
-func (n *ProximityQuery) Type() string     { return "ProximityQuery" }
+func (n *ProximityQuery) Type() string       { return "ProximityQuery" }
 func (n *ProximityQuery) Position() Position { return n.Pos }
 
 // ExistsQuery represents an existence check (_exists_:field)
@@ -112,7 +112,7 @@ type ExistsQuery struct {
 	Pos   Position
 }
 
-func (n *ExistsQuery) Type() string     { return "ExistsQuery" }
+func (n *ExistsQuery) Type() string       { return "ExistsQuery" }
 func (n *ExistsQuery) Position() Position { return n.Pos }
 
 // BoostQuery represents a boosted query (query^boost)
@@ -122,7 +122,7 @@ type BoostQuery struct {
 	Pos   Position
 }
 
-func (n *BoostQuery) Type() string     { return "BoostQuery" }
+func (n *BoostQuery) Type() string       { return "BoostQuery" }
 func (n *BoostQuery) Position() Position { return n.Pos }
 
 // TermValue represents a simple term
@@ -176,7 +176,7 @@ type WildcardQuery struct {
 	Pos     Position
 }
 
-func (n *WildcardQuery) Type() string     { return "WildcardQuery" }
+func (n *WildcardQuery) Type() string       { return "WildcardQuery" }
 func (n *WildcardQuery) Position() Position { return n.Pos }
 
 // TermQuery represents a standalone term query
@@ -185,7 +185,7 @@ type TermQuery struct {
 	Pos  Position
 }
 
-func (n *TermQuery) Type() string     { return "TermQuery" }
+func (n *TermQuery) Type() string       { return "TermQuery" }
 func (n *TermQuery) Position() Position { return n.Pos }
 
 // PhraseQuery represents a standalone phrase query
@@ -194,7 +194,7 @@ type PhraseQuery struct {
 	Pos    Position
 }
 
-func (n *PhraseQuery) Type() string     { return "PhraseQuery" }
+func (n *PhraseQuery) Type() string       { return "PhraseQuery" }
 func (n *PhraseQuery) Position() Position { return n.Pos }
 
 // GroupQuery represents a grouped query (...)
@@ -203,5 +203,5 @@ type GroupQuery struct {
 	Pos   Position
 }
 
-func (n *GroupQuery) Type() string     { return "GroupQuery" }
+func (n *GroupQuery) Type() string       { return "GroupQuery" }
 func (n *GroupQuery) Position() Position { return n.Pos }

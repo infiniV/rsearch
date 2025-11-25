@@ -302,7 +302,7 @@ func TestMethodNotAllowed(t *testing.T) {
 
 			if rec.Code != http.StatusMethodNotAllowed && rec.Code != http.StatusOK && rec.Code != http.StatusNotFound {
 				// Some combinations are valid, others should be method not allowed
-				if (tt.name == "RegisterSchema with GET") {
+				if tt.name == "RegisterSchema with GET" {
 					if rec.Code != http.StatusMethodNotAllowed {
 						t.Errorf("%s status = %v, want %v", tt.name, rec.Code, http.StatusMethodNotAllowed)
 					}
