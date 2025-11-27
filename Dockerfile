@@ -33,7 +33,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     ./cmd/rsearch/main.go
 
 # Stage 2: Runtime stage
-FROM alpine:3.19
+FROM alpine:3.22
 
 # Build arguments for labels
 ARG VERSION=dev
